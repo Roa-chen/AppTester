@@ -29,10 +29,10 @@ function App() {
 
   const RootStack = () => (
     <Stack.Navigator screenOptions={options}>
+      <Stack.Screen name="CardViewerApp" component={CardViewerApp} />
       <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
       <Stack.Screen name="ProfileCardApp" component={ProfileCardApp} />
       <Stack.Screen name="ThemeChangerApp" component={ThemeChangerApp} />
-      <Stack.Screen name="CardViewerApp" component={CardViewerApp} />
     </Stack.Navigator>
   );
 
