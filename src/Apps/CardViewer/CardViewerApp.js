@@ -5,55 +5,59 @@ import {
   Text,
   StyleSheet,
   TouchableHighlight,
+  Animated,
 } from 'react-native';
 
 const Element = props => {
   const id = props.id;
 
   return (
-    <TouchableHighlight
-      style={[
-        styles.elem,
-        { backgroundColor: `rgb(${id * 20}, ${id * 20}, ${id * 20})` },
-        props.extend ? styles.elemExtends : null,
-      ]}
-      onPress={props.onPress}
-      underlayColor={`rgb(${id * 20}, ${id * 20}, ${id * 20})`}>
-      <Text style={styles.elemText}>{id}</Text>
-    </TouchableHighlight>
+    <Animated.View style={[styles.elem, props.animatedValue.getLayout(), {backgroundColor: `rgb(${id * 20}, ${id * 20}, ${id * 20})`}]}>
+      <TouchableHighlight
+        // style={[
+        //   props.extend ? styles.elemExtends : null,
+        // ]}
+        onPress={props.onPress}
+        underlayColor={`rgb(${id * 20}, ${id * 20}, ${id * 20})`}>
+        <Text style={styles.elemText}>{id}</Text>
+      </TouchableHighlight>
+    </Animated.View>
   );
 };
 
 export default class CardViewerApp extends Component {
   constructor() {
     super();
-    this.state = { elems: [1, 2, 3, 4, 5, 6, 7, 8], selected: 0 };
+    this.state = { elems: [1, 2, 3, 4, 5, 6, 7, 8], elemsValues: [], selected: 0, lastSelected: 0 };
   }
 
   changeSelected = newSelected => {
-    this.setState({ selected: newSelected });
+    this.setState({ lastSelected: this.state.selected, selected: newSelected });
   };
+
+  UNSAFE_componentWillMount() {
+    this.state.elems.forEach((elem, index) => {
+      this.state.elemsValues.push(new Animated.ValueXY({x: 0, y: 240*index}))
+    })
+  }
 
   render() {
 
-    // create branch updateCardViewer
+      const {elems, elemsValues} = this.state;
 
     return (
       <View style={styles.container}>
         <ScrollView
           style={styles.elemContainer}
-          contentContainerStyle={styles.elemContainerContentStyle}>
-          {this.state.elems
-            .filter(item => (item !== this.state.selected ? item : null))
-            .map((item, index) => {
-              return (
+          contentContainerStyle={{paddingTop: elems.length*240+20}}>
+          {elems.map((item, index) => {
+            return (
                 <Element
-                  key={index}
-                  id={item}
-                  onPress={this.changeSelected.bind(this, item)}
-                />
-              );
-            })}
+                  id={index}
+                  onPress={() => {}}
+                  animatedValue={elemsValues[index]} />
+            )
+          })}
         </ScrollView>
         <View style={styles.elemViewer}>
           {this.state.elems
@@ -82,7 +86,6 @@ const styles = StyleSheet.create({
   },
   elemContainer: {
     backgroundColor: 'pink',
-    flex: 1,
     paddingTop: 20,
   },
   elemContainerContentStyle: {
@@ -96,11 +99,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   elem: {
-    backgroundColor: 'yellow',
     height: 220,
     width: 125,
-    marginBottom: 20,
     borderRadius: 8,
+    position: 'absolute',
   },
   elemExtends: {
     height: 440,
@@ -112,3 +114,4 @@ const styles = StyleSheet.create({
     margin: 10,
   },
 });
+
