@@ -4,23 +4,29 @@ import {
   ScrollView,
   Text,
   StyleSheet,
-  TouchableHighlight,
+  TouchableOpacity,
   Animated,
+  Dimensions,
 } from 'react-native';
+
+const numberOfElem = 10;
+const elemWidth = 125;
+const elemHeight = 100;
+const margin = 20;
+const duration = 200;
 
 const Element = props => {
   const id = props.id;
 
   return (
-    <Animated.View style={[styles.elem, props.animatedValue.getLayout(), {backgroundColor: `rgb(${id * 20}, ${id * 20}, ${id * 20})`}]}>
-      <TouchableHighlight
-        // style={[
-        //   props.extend ? styles.elemExtends : null,
-        // ]}
-        onPress={props.onPress}
-        underlayColor={`rgb(${id * 20}, ${id * 20}, ${id * 20})`}>
-        <Text style={styles.elemText}>{id}</Text>
-      </TouchableHighlight>
+    <Animated.View style={[
+      styles.elem, props.animatedValue.getLayout(), 
+      {backgroundColor: `rgb(${id / numberOfElem * 256}, ${id / numberOfElem * 256}, ${id / numberOfElem * 256})`}]}>
+      <TouchableOpacity
+      style={{width: '100%', height: '100%', borderRadius: 8}}
+        onPress={props.onPress} >
+          <Text style={styles.elemText}>{id}</Text>
+      </TouchableOpacity>
     </Animated.View>
   );
 };
@@ -28,51 +34,87 @@ const Element = props => {
 export default class CardViewerApp extends Component {
   constructor() {
     super();
-    this.state = { elems: [1, 2, 3, 4, 5, 6, 7, 8], elemsValues: [], selected: 0, lastSelected: 0 };
+    this.state = { elems: [], elemsValues: [], selected: 4, isAnimating: false };
+    this.x_position = 0;
   }
 
-  changeSelected = newSelected => {
-    this.setState({ lastSelected: this.state.selected, selected: newSelected });
+  changeSelected = selected => {
+    this.setState({selected})
   };
 
   UNSAFE_componentWillMount() {
+
+    for (let i=0; i<numberOfElem; i++) {
+      this.state.elems.push(i+1)
+    }
+
+    const width = Dimensions.get('screen').width / 3;
+    this.x_position = width / 2 - elemWidth/2
+
     this.state.elems.forEach((elem, index) => {
-      this.state.elemsValues.push(new Animated.ValueXY({x: 0, y: 240*index}))
+      this.state.elemsValues.push(new Animated.ValueXY({x: this.x_position, y: (elemHeight + margin)*index}))
     })
+  }
+
+  moveElems = (newSelected) => {
+
+    if (this.state.selected === newSelected) return
+
+    const {elemsValues} = this.state;
+
+    let animationList = []
+    let y_position = 0;
+
+    this.state.elems.forEach((elem, index) => {
+
+      if (elem === newSelected) {
+        animationList.push(Animated.timing(elemsValues[index], {
+          toValue: {x: 100, y: 300},
+          duration: duration,
+          useNativeDriver: false
+        }))
+      } else {
+        animationList.push(Animated.timing(elemsValues[index], {
+          toValue: {x: this.x_position, y: y_position},
+          duration: duration,
+          useNativeDriver: false
+        }))
+
+        y_position += elemHeight + margin;
+      }
+    })
+
+    Animated.parallel(animationList).start(() => {
+      this.changeSelected(newSelected);
+    })
+
   }
 
   render() {
 
-      const {elems, elemsValues} = this.state;
+    const {elems, elemsValues, isAnimating} = this.state;
 
     return (
       <View style={styles.container}>
         <ScrollView
           style={styles.elemContainer}
-          contentContainerStyle={{paddingTop: elems.length*240+20}}>
+          contentContainerStyle={{paddingTop: elems.length*(elemHeight + margin)+20}}>
           {elems.map((item, index) => {
             return (
                 <Element
+                  key={index}
                   id={index}
-                  onPress={() => {}}
+                  onPress={() => this.moveElems(item)}
                   animatedValue={elemsValues[index]} />
             )
           })}
         </ScrollView>
         <View style={styles.elemViewer}>
-          {this.state.elems
-            .filter(item => (item === this.state.selected ? item : null))
-            .map((item, index) => {
-              return (
-                <Element
-                  key={index}
-                  id={item}
-                  extend={true}
-                  onPress={this.changeSelected.bind(this, -1)}
-                />
-              );
-            })}
+         
         </View>
+        {/* {
+          isAnimating && <View />
+        } */}
       </View>
     );
   }
@@ -99,8 +141,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   elem: {
-    height: 220,
-    width: 125,
+    height: elemHeight,
+    width: elemWidth,
     borderRadius: 8,
     position: 'absolute',
   },
