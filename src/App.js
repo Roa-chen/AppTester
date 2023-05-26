@@ -8,7 +8,7 @@ import {
 import { Provider } from 'react-native-paper';
 
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 
 import Home from './screens/Home';
 import ProfileCardApp from './Apps/ProfileCard/ProfileCard';
@@ -19,8 +19,16 @@ function App() {
 
   const Stack = createStackNavigator();
 
+  const options = {
+    gestureEnabled: true,
+    gestureDirection: 'vertical',
+    cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+    headerShown: true,
+    // header: CardViewerApp,
+  }
+
   const RootStack = () => (
-    <Stack.Navigator screenOptions={{ headerShown: true }}>
+    <Stack.Navigator screenOptions={options}>
       <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
       <Stack.Screen name="ProfileCardApp" component={ProfileCardApp} />
       <Stack.Screen name="ThemeChangerApp" component={ThemeChangerApp} />

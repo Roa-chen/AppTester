@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
     height: 220,
     width: 125,
     marginBottom: 20,
+    borderRadius: 8,
   },
   elemExtends: {
     height: 440,
