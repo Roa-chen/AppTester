@@ -1,7 +1,6 @@
 import React, { Component, createRef, useRef } from 'react';
 import {
   View,
-  ScrollView,
   Text,
   StyleSheet,
   TouchableOpacity,
@@ -9,11 +8,16 @@ import {
   Dimensions,
 } from 'react-native';
 
+import { ScrollView } from 'react-native-gesture-handler';
+
+const width = Dimensions.get('window').width;
+const height = Dimensions.get('window').height
+
 const numberOfElem = 10;
-const elemWidth = 125;
-const elemHeight = 200;
+const elemWidth = (width / 3) * 90 / 100;
+const elemHeight = 5 * elemWidth / 3;
 const margin = 20;
-const duration = 2000;
+const duration = 400;
 const scale = 2;
 
 export default class CardViewerApp extends Component {
@@ -23,12 +27,10 @@ export default class CardViewerApp extends Component {
 
     this.scrollPosition = createRef();
     this.scrollPosition.current = 0;
-    this.width = 0;
     
     this.x_position = 0
     this.x_destination = 0
     this.y_destination = 0
-
 
     this.selected = createRef();
     this.selected.current = 100000;
@@ -50,11 +52,9 @@ export default class CardViewerApp extends Component {
       this.state.elems.push(i+1)
     }
 
-    this.width = Dimensions.get('window').width;
-    const height = Dimensions.get('window').height
-    this.x_position = this.width / 6 - elemWidth/2
+    this.x_position = width / 6 - elemWidth/2
 
-    this.x_destination = 2*this.width/3 - elemWidth/2
+    this.x_destination = 2*width/3 - elemWidth/2
     this.y_destination = height/2 - elemHeight/2
 
 
@@ -150,7 +150,6 @@ export default class CardViewerApp extends Component {
 
   Element = props => {
     const id = props.id;
-
     return (
       <Animated.View style={[
         styles.elem,
@@ -192,7 +191,7 @@ export default class CardViewerApp extends Component {
         </ScrollView>
 
         <View style={styles.elemViewer}>
-          {(!isAnimating && this.selected.current < 100000 ) && <this.Element animatedValue={new Animated.ValueXY({x: this.x_destination - this.width/3, y: this.y_destination})} scaleValue={scale} onPress={() => this.moveElems(100000)} id={this.selected.current} />}
+          {(!isAnimating && this.selected.current < 100000 ) && <this.Element animatedValue={new Animated.ValueXY({x: this.x_destination - width/3, y: this.y_destination})} scaleValue={scale} onPress={() => this.moveElems(100000)} id={this.selected.current} />}
         </View>
         {
           isAnimating && <View style={styles.transitionContainer}>

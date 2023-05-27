@@ -15,6 +15,8 @@ import ProfileCardApp from './Apps/ProfileCard/ProfileCard';
 import ThemeChangerApp from './Apps/ThemeChanger/ThemeChangerApp';
 import CardViewerApp from './Apps/CardViewer/CardViewerApp';
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 function App() {
 
   const Stack = createStackNavigator();
@@ -29,19 +31,21 @@ function App() {
 
   const RootStack = () => (
     <Stack.Navigator screenOptions={options}>
-      <Stack.Screen name="CardViewerApp" component={CardViewerApp} />
       <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
+      <Stack.Screen name="CardViewerApp" component={CardViewerApp} />
       <Stack.Screen name="ProfileCardApp" component={ProfileCardApp} />
       <Stack.Screen name="ThemeChangerApp" component={ThemeChangerApp} />
     </Stack.Navigator>
   );
 
   return (
-    <Provider>
-      <NavigationContainer>
-        <RootStack />
-      </NavigationContainer>
-    </Provider>
+    <GestureHandlerRootView style={{flex: 1}}>
+      <Provider>
+        <NavigationContainer>
+          <RootStack />
+        </NavigationContainer>
+      </Provider>
+    </GestureHandlerRootView>
   );
 
 }
