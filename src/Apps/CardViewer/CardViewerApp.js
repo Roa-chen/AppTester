@@ -11,9 +11,9 @@ import {
 
 const numberOfElem = 10;
 const elemWidth = 125;
-const elemHeight = 100;
+const elemHeight = 200;
 const margin = 20;
-const duration = 200;
+const duration = 2000;
 const scale = 2;
 
 export default class CardViewerApp extends Component {
