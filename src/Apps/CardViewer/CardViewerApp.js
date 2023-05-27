@@ -20,6 +20,9 @@ export default class CardViewerApp extends Component {
   constructor() {
     super();
     this.state = { elems: [], elemsValues: [], transitionAnimatedValue: [], isAnimating: false };
+
+    this.scrollPosition = createRef();
+    this.scrollPosition.current = 0;
     
     this.x_position = 0
     this.x_destination = 0
@@ -81,7 +84,7 @@ export default class CardViewerApp extends Component {
 
       if (elem === this.selected.current) {
 
-        this.state.transitionAnimatedValue[0] = new Animated.ValueXY({x: this.x_position, y:y_position+20-(elem >= this.lastSelected.current ? elemHeight + margin : 0)})
+        this.state.transitionAnimatedValue[0] = new Animated.ValueXY({x: this.x_position, y:y_position+20-(elem >= this.lastSelected.current ? elemHeight + margin : 0)-this.scrollPosition.current})
         this.state.transitionAnimatedValue[2] = new Animated.Value(1)
 
         animationList.push(Animated.timing(this.state.transitionAnimatedValue[0], {
@@ -107,7 +110,7 @@ export default class CardViewerApp extends Component {
         this.state.transitionAnimatedValue[3] = new Animated.Value(scale)
 
         animationList.push(Animated.timing(this.state.transitionAnimatedValue[1], {
-          toValue: {x: this.x_position, y: y_position+20},
+          toValue: {x: this.x_position, y: y_position+20-this.scrollPosition.current},
           duration: duration,
           useNativeDriver: false
         }))
@@ -171,7 +174,8 @@ export default class CardViewerApp extends Component {
       <View style={styles.container}>
         <ScrollView
           style={styles.elemContainer}
-          contentContainerStyle={{paddingTop: elems.length*(elemHeight + margin)+20}}>
+          contentContainerStyle={{paddingTop: elems.length*(elemHeight + margin)+20}}
+          onScroll={(event) => {this.scrollPosition.current = event.nativeEvent.contentOffset.y}}>
           {elems.map((item, index) => {
             return (
                 <this.Element
@@ -184,7 +188,6 @@ export default class CardViewerApp extends Component {
         </ScrollView>
 
         <View style={styles.elemViewer}>
-         
         </View>
         {
           isAnimating && <View style={styles.transitionContainer}>
