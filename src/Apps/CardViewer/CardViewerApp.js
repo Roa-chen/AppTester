@@ -13,7 +13,7 @@ const numberOfElem = 10;
 const elemWidth = 125;
 const elemHeight = 100;
 const margin = 20;
-const duration = 2000;
+const duration = 200;
 const scale = 2;
 
 export default class CardViewerApp extends Component {
@@ -23,6 +23,7 @@ export default class CardViewerApp extends Component {
 
     this.scrollPosition = createRef();
     this.scrollPosition.current = 0;
+    this.width = 0;
     
     this.x_position = 0
     this.x_destination = 0
@@ -49,11 +50,11 @@ export default class CardViewerApp extends Component {
       this.state.elems.push(i+1)
     }
 
-    const width = Dimensions.get('window').width;
+    this.width = Dimensions.get('window').width;
     const height = Dimensions.get('window').height
-    this.x_position = width / 6 - elemWidth/2
+    this.x_position = this.width / 6 - elemWidth/2
 
-    this.x_destination = 2*width/3 - elemWidth/2
+    this.x_destination = 2*this.width/3 - elemWidth/2
     this.y_destination = height/2 - elemHeight/2
 
 
@@ -149,12 +150,12 @@ export default class CardViewerApp extends Component {
 
   Element = props => {
     const id = props.id;
-  
+
     return (
       <Animated.View style={[
         styles.elem,
         props.animatedValue.getLayout(), 
-        {transform: [{scale: props.scaleValue ? props.scaleValue : 1}]},
+        {transform: [{scale: props.scaleValue ? props.scaleValue : 1}], opacity: props.hide ? 0 : 1},
         {backgroundColor: `rgb(${id / numberOfElem * 256}, ${id / numberOfElem * 256}, ${id / numberOfElem * 256})`}]}>
 
         <TouchableOpacity
@@ -176,23 +177,27 @@ export default class CardViewerApp extends Component {
           style={styles.elemContainer}
           contentContainerStyle={{paddingTop: elems.length*(elemHeight + margin)+20}}
           onScroll={(event) => {this.scrollPosition.current = event.nativeEvent.contentOffset.y}}>
+
           {elems.map((item, index) => {
             return (
                 <this.Element
                   key={index}
                   id={item}
                   onPress={() => this.moveElems(item)}
-                  animatedValue={elemsValues[index]} />
+                  animatedValue={elemsValues[index]}
+                  hide={item === this.selected.current || (isAnimating && item === this.lastSelected.current)} />
+            
             )
           })}
         </ScrollView>
 
         <View style={styles.elemViewer}>
+          {(!isAnimating && this.selected.current < 100000 ) && <this.Element animatedValue={new Animated.ValueXY({x: this.x_destination - this.width/3, y: this.y_destination})} scaleValue={scale} onPress={() => this.moveElems(100000)} id={this.selected.current} />}
         </View>
         {
           isAnimating && <View style={styles.transitionContainer}>
-            <this.Element animatedValue={transitionAnimatedValue[0]} onPress={() => {}} id={this.selected.current} scaleValue={transitionAnimatedValue[2]} />
-            <this.Element animatedValue={transitionAnimatedValue[1]} onPress={() => {}} id={this.lastSelected.current} scaleValue={transitionAnimatedValue[3]} />
+            { this.lastSelected.current < 99999 && <this.Element animatedValue={transitionAnimatedValue[1]} onPress={() => {}} id={this.lastSelected.current} scaleValue={transitionAnimatedValue[3]} />}
+            { this.selected.current < 100000 && <this.Element animatedValue={transitionAnimatedValue[0]} onPress={() => {}} id={this.selected.current} scaleValue={transitionAnimatedValue[2]} />}
           </View>
         }
 
