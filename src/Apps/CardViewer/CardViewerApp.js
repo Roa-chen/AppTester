@@ -29,10 +29,14 @@ export default class CardViewerApp extends Component {
     this.selected = createRef();
     this.selected.current = 100000;
 
+    this.lastSelected = createRef();
+    this.lastSelected.current = -1;
+
 
   }
 
   changeSelected = newSelected => {
+    this.lastSelected.current = this.selected.current
     this.selected.current = newSelected;
   };
 
@@ -55,7 +59,7 @@ export default class CardViewerApp extends Component {
       this.state.elemsValues.push(new Animated.ValueXY({x: this.x_position, y: (elemHeight + margin)*index}))
     })
 
-    this.state.transitionAnimatedValue.push(new Animated.ValueXY({x: 200, y: 200}))
+    this.state.transitionAnimatedValue.push(new Animated.ValueXY({x: 0, y: 0}))
     this.state.transitionAnimatedValue.push(new Animated.ValueXY({x: this.x_destination, y: this.y_destination}))
     this.state.transitionAnimatedValue.push(new Animated.Value(1))
     this.state.transitionAnimatedValue.push(new Animated.Value(scale))
@@ -71,11 +75,13 @@ export default class CardViewerApp extends Component {
     let animationList = []
     let y_position = 0;
 
+    this.changeSelected(newSelected);
+
     this.state.elems.forEach((elem, index) => {
 
-      if (elem === newSelected) {
+      if (elem === this.selected.current) {
 
-        this.state.transitionAnimatedValue[0] = new Animated.ValueXY({x: this.x_position, y:y_position+20-(elem >= this.selected.current ? elemHeight + margin : 0)})
+        this.state.transitionAnimatedValue[0] = new Animated.ValueXY({x: this.x_position, y:y_position+20-(elem >= this.lastSelected.current ? elemHeight + margin : 0)})
         this.state.transitionAnimatedValue[2] = new Animated.Value(1)
 
         animationList.push(Animated.timing(this.state.transitionAnimatedValue[0], {
@@ -95,21 +101,22 @@ export default class CardViewerApp extends Component {
           useNativeDriver: false
         }))
       } 
-      else if (elem === this.selected.current) {
+      else if (elem === this.lastSelected.current) {
 
-        // this.state.transitionAnimatedValue[1] = new Animated.ValueXY({x: this.x_destination, y:this.y_destination})
-        // this.state.transitionAnimatedValue[3] = new Animated.Value(scale)
+        this.state.transitionAnimatedValue[1] = new Animated.ValueXY({x: this.x_destination, y:this.y_destination})
+        this.state.transitionAnimatedValue[3] = new Animated.Value(scale)
 
-        // animationList.push(Animated.timing(this.state.transitionAnimatedValue[1], {
-        //   toValue: {x: this.x_position, y: this.y_position},
-        //   duration: duration,
-        //   useNativeDriver: false
-        // }))
-        // animationList.push(Animated.timing(this.state.transitionAnimatedValue[3], {
-        //   toValue: 1,
-        //   duration: duration,
-        //   useNativeDriver: false
-        // }))
+        animationList.push(Animated.timing(this.state.transitionAnimatedValue[1], {
+          toValue: {x: this.x_position, y: y_position+20},
+          duration: duration,
+          useNativeDriver: false
+        }))
+
+        animationList.push(Animated.timing(this.state.transitionAnimatedValue[3], {
+          toValue: 1,
+          duration: duration,
+          useNativeDriver: false
+        }))
 
         animationList.push(Animated.timing(elemsValues[index], {
           toValue: {x: this.x_position, y: y_position},
@@ -131,7 +138,6 @@ export default class CardViewerApp extends Component {
       }
     })
     
-    this.changeSelected(newSelected);
     this.setState({isAnimating: true})
     Animated.parallel(animationList).start(() => {
       this.setState({isAnimating: false})
@@ -183,7 +189,7 @@ export default class CardViewerApp extends Component {
         {
           isAnimating && <View style={styles.transitionContainer}>
             <this.Element animatedValue={transitionAnimatedValue[0]} onPress={() => {}} id={this.selected.current} scaleValue={transitionAnimatedValue[2]} />
-            <this.Element animatedValue={transitionAnimatedValue[1]} onPress={() => {}} id={this.selected.current} scaleValue={transitionAnimatedValue[3]} />
+            <this.Element animatedValue={transitionAnimatedValue[1]} onPress={() => {}} id={this.lastSelected.current} scaleValue={transitionAnimatedValue[3]} />
           </View>
         }
 
