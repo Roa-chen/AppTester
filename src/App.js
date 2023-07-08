@@ -16,6 +16,7 @@ import ThemeChangerApp from './Apps/ThemeChanger/ThemeChangerApp';
 import CardViewerApp from './Apps/CardViewer/CardViewerApp';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import ChartApp from './Apps/ChartApp/ChartApp';
 
 function App() {
 
@@ -35,6 +36,9 @@ function App() {
       <Stack.Screen name="CardViewerApp" component={CardViewerApp} />
       <Stack.Screen name="ProfileCardApp" component={ProfileCardApp} />
       <Stack.Screen name="ThemeChangerApp" component={ThemeChangerApp} />
+      <Stack.Screen name="ChartApp" component={ChartApp} options={{
+            headerShown: false,
+      }} />
     </Stack.Navigator>
   );
 
