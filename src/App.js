@@ -5,7 +5,7 @@ import {
   Text,
 } from 'react-native';
 
-import { Provider } from 'react-native-paper';
+import { Provider, PaperProvider, MD3LightTheme as DefaultTheme } from 'react-native-paper';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
@@ -44,11 +44,11 @@ function App() {
 
   return (
     <GestureHandlerRootView style={{flex: 1}}>
-      <Provider>
+      <PaperProvider theme={DefaultTheme}>
         <NavigationContainer>
           <RootStack />
         </NavigationContainer>
-      </Provider>
+      </PaperProvider>
     </GestureHandlerRootView>
   );
 
