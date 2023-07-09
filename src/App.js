@@ -14,9 +14,10 @@ import Home from './screens/Home';
 import ProfileCardApp from './Apps/ProfileCard/ProfileCard';
 import ThemeChangerApp from './Apps/ThemeChanger/ThemeChangerApp';
 import CardViewerApp from './Apps/CardViewer/CardViewerApp';
+import ChartApp from './Apps/ChartApp/ChartApp';
+import MaskedViewApp from './Apps/MaskedView/MaskedViewApp'
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ChartApp from './Apps/ChartApp/ChartApp';
 
 function App() {
 
@@ -39,6 +40,7 @@ function App() {
       <Stack.Screen name="ChartApp" component={ChartApp} options={{
             headerShown: false,
       }} />
+      <Stack.Screen name="MaskedViewApp" component={MaskedViewApp} />
     </Stack.Navigator>
   );
 

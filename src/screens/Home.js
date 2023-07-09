@@ -21,6 +21,7 @@ const Home = ({ navigation }) => {
       <List.Item title="ThemeChangerApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate(ThemeChangerApp))} />
       <List.Item title="CardViewerApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate(CardViewerApp))} />
       <List.Item title="ChartApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("ChartApp"))} />
+      <List.Item title="MaskedView" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("MaskedViewApp"))} />
     </List.Accordion>
   )
 }
