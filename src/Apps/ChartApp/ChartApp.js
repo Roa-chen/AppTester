@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,7 +16,20 @@ import { Chart, Line, Area, HorizontalAxis, VerticalAxis } from 'react-native-re
 function ChartApp() {
   const isDarkMode = useColorScheme() === 'dark';
 
-  const width = Dimensions.get('window').width
+  const [width, setWidth] = useState(Dimensions.get('window').width);
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener(
+      'change',
+      ({window}) => {
+        setWidth(window.width);
+      }
+    )
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
 
   const [multipleLines, setMultipleLines] = useState(false);
   const [ShowArea, setShowArea] = useState(false);
@@ -187,7 +200,7 @@ function ChartApp() {
           </Chart>
         </View>
 
-        <View>
+        <View style={width > 600 ? {flexDirection: 'row', width: width/2, justifyContent: 'space-between'} : {flexDirection: 'column'}}>
           <CustomSwitch label="Multiple Lines" value={multipleLines} onValueChange={(value) => {setMultipleLines(value)}} />
           <CustomSwitch label="Display Area" value={ShowArea} onValueChange={(value) => {setShowArea(value)}} />
         </View>
