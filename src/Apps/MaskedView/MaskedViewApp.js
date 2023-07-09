@@ -1,39 +1,43 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, Image } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
+import backgroundImage from './backgroundImage.jpg'
 
 const App = () => {
+
   return (
-    <MaskedView
-      style={{ flex: 1, flexDirection: 'row', height: '100%' }}
-      maskElement={
-        <View
-          style={{
-            // Transparent background because mask is based off alpha channel.
-            backgroundColor: 'transparent',
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Text
+    <View style={{backgroundColor: '#444', flex: 1}}>
+
+      <MaskedView
+        style={{ flexDirection: 'row', height: '100%', backgroundColor: 'black', flex: 1 }}
+        maskElement={
+          <View
             style={{
-              fontSize: 60,
-              color: 'black',
-              fontWeight: 'bold',
+              // Transparent background because mask is based off alpha channel.
+              backgroundColor: 'rgba(0, 0, 0, 0)',
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
-            Basic Mask
-          </Text>
-        </View>
-      }
-    >
-      {/* Shows behind the mask, you can put anything here, such as an image */}
-      <View style={{ flex: 1, height: '100%', backgroundColor: '#324376' }} />
-      <View style={{ flex: 1, height: '100%', backgroundColor: '#F5DD90' }} />
-      <View style={{ flex: 1, height: '100%', backgroundColor: '#F76C5E' }} />
-      <View style={{ flex: 1, height: '100%', backgroundColor: '#e1e1e1' }} />
-    </MaskedView>
+            <Text
+              style={{
+                fontSize: 60,
+                color: 'rgba(0, 0, 0, 1)',
+                fontWeight: 'bold',
+              }}
+            >
+              Basic Mask
+            </Text>
+          </View>
+        }
+      >
+        <Image source={backgroundImage} style={{
+          flex: 1,
+          height: '100%',
+        }} />
+      </MaskedView>
+    </View>
   );
 }
 
