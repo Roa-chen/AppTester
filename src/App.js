@@ -18,6 +18,7 @@ import ChartApp from './Apps/ChartApp/ChartApp';
 import MaskedViewApp from './Apps/MaskedView/MaskedViewApp'
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import CarouselApp from './Apps/CarouselApp/CarouselApp';
 
 function App() {
 
@@ -41,6 +42,7 @@ function App() {
             headerShown: false,
       }} />
       <Stack.Screen name="MaskedViewApp" component={MaskedViewApp} />
+      <Stack.Screen name="CarouselApp" component={CarouselApp} />
     </Stack.Navigator>
   );
 

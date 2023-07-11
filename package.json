@@ -14,7 +14,7 @@
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/stack": "^6.3.16",
     "react": "18.2.0",
-    "react-native": "^0.71.8",
+    "react-native": "^0.71.4",
     "react-native-gesture-handler": "^2.9.0",
     "react-native-paper": "^5.8.0",
     "react-native-responsive-linechart": "^5.7.1",

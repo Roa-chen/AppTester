@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -13,15 +13,18 @@ import CardViewerApp from '../Apps/CardViewer/CardViewerApp';
 
 const Home = ({ navigation }) => {
 
+  const [expanded, setExpanded] = useState(true);
+
   const navigate = (route) => (navigation.navigate(route))
 
   return (
-    <List.Accordion title="Applications" left={props => <List.Icon {...props} icon="folder" />}  >
-      <List.Item title="ProfileCardApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate(ProfileCardApp))} />
+    <List.Accordion title="Applications" left={props => <List.Icon {...props} icon="folder" />} expanded={expanded} onPress={() => setExpanded(!expanded)}  >
+      <List.Item title="ProfileCardApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate(ProfileCardApp))}  />
       <List.Item title="ThemeChangerApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate(ThemeChangerApp))} />
       <List.Item title="CardViewerApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate(CardViewerApp))} />
       <List.Item title="ChartApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("ChartApp"))} />
       <List.Item title="MaskedView" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("MaskedViewApp"))} />
+      <List.Item title="CarouselApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("CarouselApp"))} />
     </List.Accordion>
   )
 }
