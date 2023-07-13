@@ -19,6 +19,7 @@ import MaskedViewApp from './Apps/MaskedView/MaskedViewApp'
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CarouselApp from './Apps/CarouselApp/CarouselApp';
+import SliderApp from './Apps/SliderApp/SliderApp';
 
 function App() {
 
@@ -33,7 +34,7 @@ function App() {
   }
 
   const RootStack = () => (
-    <Stack.Navigator screenOptions={options}>
+    <Stack.Navigator screenOptions={options} initialRouteName='Home'>
       <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
       <Stack.Screen name="CardViewerApp" component={CardViewerApp} />
       <Stack.Screen name="ProfileCardApp" component={ProfileCardApp} />
@@ -43,6 +44,11 @@ function App() {
       }} />
       <Stack.Screen name="MaskedViewApp" component={MaskedViewApp} />
       <Stack.Screen name="CarouselApp" component={CarouselApp} />
+      <Stack.Screen name="SliderApp" component={SliderApp} options={{
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        headerShown: false,
+        gestureEnabled: false,
+      }} />
     </Stack.Navigator>
   );
 
