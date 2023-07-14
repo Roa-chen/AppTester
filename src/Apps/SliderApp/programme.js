@@ -8,10 +8,27 @@ let units = ['rpe', 'percent', 'kg', 'lbs']
 let types = ['squat', 'bench', 'deadlift', ...defaultExercices, ...userExercices]
 let modificators = ['5cm deficit', 'strap', ...defaultModificators, ...userModificators]
 
-export const programme = {
+export const addWeek = (programme) => {
+  programme.data.push({
+    name: 'week',
+    data: []
+  })
+
+}
+
+export const getProgramme = (programmeId) => {
+
+  //TODO return programme according to programmeId
+
+  return programme;
+
+}
+
+const programme = {
   name: 'programme1',
   startingDate: null,
   endingDate: null,
+  id: 123456,
   data: [
 
     {

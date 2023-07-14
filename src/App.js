@@ -34,7 +34,7 @@ function App() {
   }
 
   const RootStack = () => (
-    <Stack.Navigator screenOptions={options} initialRouteName='Home'>
+    <Stack.Navigator screenOptions={options} initialRouteName={__DEV__ ? 'BlocPeak' : 'Home'}>
       <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
       <Stack.Screen name="CardViewerApp" component={CardViewerApp} />
       <Stack.Screen name="ProfileCardApp" component={ProfileCardApp} />

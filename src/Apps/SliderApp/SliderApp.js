@@ -1,23 +1,36 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, Dimensions, StyleSheet, Image, Alert, Switch } from 'react-native';
 import { ScrollView, TouchableWithoutFeedback, FlatList } from "react-native-gesture-handler";
-import { programme } from "./programme";
+import useEditingProgramme from "./useProgramme";
 
 const windowWidth = Dimensions.get('window').width;
 
-const itemList = [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]
+const numberTabPerScreen = 4;
+
+const itemList = [[0, 1, 2, 3], [4, 5, 6]]
 const dayslist = ['lundi', 'mercredi', 'vendredi']
 
-const TabItem = ({ index, indexSelected, setIndex, show }) => {
+const TabItem = ({ index, indexSelected, setIndex, type, programme, addWeek, delWeek }) => {
+
+  const show = type === 'week' || type === 'button'
 
   const selected = index === indexSelected
   return (
     <View>
-      {show && (<TouchableWithoutFeedback onPress={() => setIndex(index)}>
-        <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
-          <Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null]}>Semaine {index + 1}</Text>
-        </View>
-      </TouchableWithoutFeedback>)}
+      {show && ( type==='week' ? (
+        <TouchableWithoutFeedback onPress={() => {setIndex(index)}} onLongPress={() => {delWeek(index, indexSelected)}}>
+          <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
+            <Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null]}>Semaine {index + 1}</Text>
+          </View>
+        </TouchableWithoutFeedback>
+      ) : (
+        <TouchableWithoutFeedback onPress={() => addWeek(programme)}>
+          <View style={[styles.tabItem]}>
+            {/* <Text style={[styles.tabItemText, {color: '#0005'}]}>Semaine {index + 1}</Text> */}
+            <Image source={require('./plusImg.png')} resizeMode="cover" />
+          </View>
+        </TouchableWithoutFeedback>
+      ))}
       {!show && (
         <View style={[styles.tabItem]}>
           <Text style={[styles.tabItemText, {color: '#0000'}]}>Semaine {index + 1}</Text>
@@ -61,38 +74,84 @@ const DayDetail = ({day}) => {
 
 const getWeeksOfProgramme = (programme) => {
 
-  console.log('calculation of getWeeksOfProgramme')
-
   const weeks = programme.data;
-  const weeksLength = weeks.length
-  const needToComplete = weeksLength%4>0 ? 4-weeksLength%4 : 0;
+  const weeksLength = weeks.length + 1
+  const needToComplete = weeksLength%numberTabPerScreen>0 ? numberTabPerScreen-weeksLength%numberTabPerScreen : 0;
 
   computedWeeks = []
+  let placedButton = false
 
-  for (let i=0; i<(weeksLength + needToComplete)/4; i++) {
+  for (let i=0; i<(weeksLength + needToComplete)/numberTabPerScreen; i++) {
     computedWeeks.push([])
-    for (let j=0; j<4; j++) {
-      computedWeeks[i].push(weeks[4*i+j])
+    for (let j=0; j<numberTabPerScreen; j++) {
+      const week = weeks[numberTabPerScreen*i+j];
+      if (week) {
+        computedWeeks[i].push('week')
+      } else {
+        computedWeeks[i].push(!placedButton ? 'button' : 'null')
+        if (!placedButton) placedButton = true
+      }
     }
   }
-
   return computedWeeks
 }
 
 export default SliderApp = () => {
 
-  const [indexSelected, setIndexSelected] = useState(0);
-  const [gestureAllowed, setGestureAllowed] = useState(true);
+  const {programme, addWeek, delWeek} = useEditingProgramme(123456);
 
-  const data = useMemo(() => (getWeeksOfProgramme(programme)), [programme])
+  const delWeekAndMove = (index, indexSelected) => {
+    delWeek(index);
+    if (indexSelected >= index) setIndex(indexSelected-1)
+  }
+
+  const [indexSelected, setIndexSelected] = useState(0);
+  const [desiredIndex, setDesiredIndex] = useState(null);
+  const [flatListDesiredIndex, setFlatListDesiredIndex] = useState(0);
+  const [gestureAllowed, setGestureAllowed] = useState(false);
+
+  const setIndex = (index) => {
+    setDesiredIndex(index)
+    setIndexSelected(index)
+    console.log('change')
+  }
+
+  const data = useMemo(() => {
+    return getWeeksOfProgramme(programme)
+  }, [programme])
 
   useEffect(() => {
-    dayDetailFlatListRef.current.scrollToIndex({index: indexSelected})
-  }, [indexSelected]);
+    
+    if (desiredIndex === null || flatListDesiredIndex === desiredIndex) {
+
+      console.log()
+
+      setIndexSelected(flatListDesiredIndex)
+      setDesiredIndex(null)
+      dayDetailFlatListRef.current.scrollToIndex({index: flatListDesiredIndex})
+    } else {
+      dayDetailFlatListRef.current.scrollToIndex({index: indexSelected})
+    }
+  }, [indexSelected, flatListDesiredIndex]);
 
   const dayDetailFlatListRef = useRef(null);
-  const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 })
-  const handlePageChange = useRef(({viewableItems}) => setIndexSelected(viewableItems[0].index))
+  const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 }).current
+
+
+  const handlePageChange = useRef(({viewableItems}) => {
+
+    setFlatListDesiredIndex(viewableItems[0].index)
+    
+    // if (desiredIndex === null) {
+    //   setIndexSelected(viewableItems[0].index)
+    //   console.log('set index to : ', viewableItems[viewableItems.length-1].index, desiredIndex)
+    // }
+    // if (viewableItems[0].index === desiredIndex) {
+    //   console.log('test')
+    //   setDesiredIndex(null)
+    // }
+
+  }).current
 
 
   const handleClick = (name) => {
@@ -135,8 +194,17 @@ export default SliderApp = () => {
             renderItem={({ item, index }) => {
               return(
                 <View style={{flexDirection: 'row', justifyContent: 'space-between', width: (windowWidth-64)}}>
-                  {item.map((week, weekIndex) => {
-                    return <TabItem key={4*index+weekIndex} data={week} index={4*index+weekIndex} indexSelected={indexSelected} setIndex={setIndexSelected} show={week!==undefined} />
+                  {item.map((weekType, weekIndex) => {
+                    return <TabItem 
+                      key={numberTabPerScreen*index+weekIndex} 
+                      index={numberTabPerScreen*index+weekIndex} 
+                      indexSelected={indexSelected} 
+                      setIndex={setIndex} 
+                      type={weekType} 
+                      programme={programme}
+                      addWeek={addWeek} 
+                      delWeek={delWeekAndMove}
+                    />
                   })}
                 </View>
               )
@@ -165,7 +233,7 @@ export default SliderApp = () => {
       <View style={styles.bottomContainer}>
         <FlatList 
           ref={dayDetailFlatListRef}
-          data={itemList.flat()}
+          data={Array(programme.data.length).fill('0')}
           renderItem={item => {
             return (
               <View style={styles.daysContainer}>
@@ -257,6 +325,8 @@ const styles = StyleSheet.create({
   tabItem: {
     height: 26,
     marginRight: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabItemSelected: {
     borderBottomWidth: 2,
