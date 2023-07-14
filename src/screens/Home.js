@@ -25,7 +25,7 @@ const Home = ({ navigation }) => {
       <List.Item title="ChartApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("ChartApp"))} />
       <List.Item title="MaskedView" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("MaskedViewApp"))} />
       <List.Item title="CarouselApp" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("CarouselApp"))} />
-      <List.Item title="Block creator" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("SliderApp"))} />
+      <List.Item title="Block creator" left={props => <List.Icon {...props} icon="folder" />} style={{ paddingLeft: 20 }} onPress={() => (navigate("BlocPeak"))} />
     </List.Accordion>
   )
 }

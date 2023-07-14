@@ -44,7 +44,7 @@ function App() {
       }} />
       <Stack.Screen name="MaskedViewApp" component={MaskedViewApp} />
       <Stack.Screen name="CarouselApp" component={CarouselApp} />
-      <Stack.Screen name="SliderApp" component={SliderApp} options={{
+      <Stack.Screen name="BlocPeak" component={SliderApp} options={{
         cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
         headerShown: false,
         gestureEnabled: false,

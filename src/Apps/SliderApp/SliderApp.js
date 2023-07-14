@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, Dimensions, StyleSheet, Image, Alert, Switch } from 'react-native';
 import { ScrollView, TouchableWithoutFeedback, FlatList } from "react-native-gesture-handler";
+import { programme } from "./programme";
 
 const windowWidth = Dimensions.get('window').width;
 
-const itemList = [[0, 1, 2, 3], [4, 5]]
+const itemList = [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]
 const dayslist = ['lundi', 'mercredi', 'vendredi']
 
 const TabItem = ({ index, indexSelected, setIndex, show }) => {
@@ -58,10 +59,32 @@ const DayDetail = ({day}) => {
   )
 }
 
+const getWeeksOfProgramme = (programme) => {
+
+  console.log('calculation of getWeeksOfProgramme')
+
+  const weeks = programme.data;
+  const weeksLength = weeks.length
+  const needToComplete = weeksLength%4>0 ? 4-weeksLength%4 : 0;
+
+  computedWeeks = []
+
+  for (let i=0; i<(weeksLength + needToComplete)/4; i++) {
+    computedWeeks.push([])
+    for (let j=0; j<4; j++) {
+      computedWeeks[i].push(weeks[4*i+j])
+    }
+  }
+
+  return computedWeeks
+}
+
 export default SliderApp = () => {
 
   const [indexSelected, setIndexSelected] = useState(0);
   const [gestureAllowed, setGestureAllowed] = useState(true);
+
+  const data = useMemo(() => (getWeeksOfProgramme(programme)), [programme])
 
   useEffect(() => {
     dayDetailFlatListRef.current.scrollToIndex({index: indexSelected})
@@ -108,15 +131,12 @@ export default SliderApp = () => {
         </View>
         <View style={styles.tabContainer}>
           <FlatList
-            data={itemList}
-            renderItem={({ item }) => {
-              if (item.length<4) {
-                item = [...item, ...Array(2).fill(-1)]
-              }
+            data={data}
+            renderItem={({ item, index }) => {
               return(
                 <View style={{flexDirection: 'row', justifyContent: 'space-between', width: (windowWidth-64)}}>
-                  {item.map((number, index) => {
-                    return <TabItem key={number+2*index} index={number} indexSelected={indexSelected} setIndex={setIndexSelected} show={number!==-1} />
+                  {item.map((week, weekIndex) => {
+                    return <TabItem key={4*index+weekIndex} data={week} index={4*index+weekIndex} indexSelected={indexSelected} setIndex={setIndexSelected} show={week!==undefined} />
                   })}
                 </View>
               )

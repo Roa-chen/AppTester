@@ -6,8 +6,7 @@ import backgroundImage from './backgroundImage.jpg'
 const App = () => {
 
   return (
-    <View style={{backgroundColor: '#444', flex: 1}}>
-
+    <View style={{ backgroundColor: '#444', flex: 1 }}>
       <MaskedView
         style={{ flexDirection: 'row', height: '100%', backgroundColor: 'black', flex: 1 }}
         maskElement={
