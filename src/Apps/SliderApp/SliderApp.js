@@ -17,8 +17,8 @@ const TabItem = ({ index, indexSelected, setIndex, type, programme, addWeek, del
   const selected = index === indexSelected
   return (
     <View>
-      {show && ( type==='week' ? (
-        <TouchableWithoutFeedback onPress={() => {setIndex(index)}} onLongPress={() => {delWeek(index, indexSelected)}}>
+      {show && (type === 'week' ? (
+        <TouchableWithoutFeedback onPress={() => { setIndex(index) }} onLongPress={() => { delWeek(index, indexSelected) }}>
           <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
             <Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null]}>Semaine {index + 1}</Text>
           </View>
@@ -33,14 +33,14 @@ const TabItem = ({ index, indexSelected, setIndex, type, programme, addWeek, del
       ))}
       {!show && (
         <View style={[styles.tabItem]}>
-          <Text style={[styles.tabItemText, {color: '#0000'}]}>Semaine {index + 1}</Text>
+          <Text style={[styles.tabItemText, { color: '#0000' }]}>Semaine {index + 1}</Text>
         </View>
       )}
     </View>
   )
 }
 
-const DayDetail = ({day}) => {
+const DayDetail = ({ day }) => {
 
   const [open, setOpen] = useState(false);
 
@@ -52,14 +52,14 @@ const DayDetail = ({day}) => {
     <View style={styles.dayContainer}>
       <View style={styles.dayTitleContainer}>
         <Text style={styles.dayTitleText}>{day}</Text>
-        <TouchableWithoutFeedback onPress={() => setOpen(open => !open)} style={{padding: 5}}>
+        <TouchableWithoutFeedback onPress={() => setOpen(open => !open)} style={{ padding: 5 }}>
           <Image source={getImage()} resizeMode="cover" />
         </TouchableWithoutFeedback>
       </View>
       <View>
         {open && <Text style={styles.dayText}>
           {
-`- Squat 1x3 @9
+            `- Squat 1x3 @9
 - Squat 3x5 @80%
 - Bench 1*AMRAP @70kg
 - Bench 4*6 @80%
@@ -76,15 +76,15 @@ const getWeeksOfProgramme = (programme) => {
 
   const weeks = programme.data;
   const weeksLength = weeks.length + 1
-  const needToComplete = weeksLength%numberTabPerScreen>0 ? numberTabPerScreen-weeksLength%numberTabPerScreen : 0;
+  const needToComplete = weeksLength % numberTabPerScreen > 0 ? numberTabPerScreen - weeksLength % numberTabPerScreen : 0;
 
   computedWeeks = []
   let placedButton = false
 
-  for (let i=0; i<(weeksLength + needToComplete)/numberTabPerScreen; i++) {
+  for (let i = 0; i < (weeksLength + needToComplete) / numberTabPerScreen; i++) {
     computedWeeks.push([])
-    for (let j=0; j<numberTabPerScreen; j++) {
-      const week = weeks[numberTabPerScreen*i+j];
+    for (let j = 0; j < numberTabPerScreen; j++) {
+      const week = weeks[numberTabPerScreen * i + j];
       if (week) {
         computedWeeks[i].push('week')
       } else {
@@ -98,61 +98,33 @@ const getWeeksOfProgramme = (programme) => {
 
 export default SliderApp = () => {
 
-  const {programme, addWeek, delWeek} = useEditingProgramme(123456);
+  const { programme, addWeek, delWeek } = useEditingProgramme(123456);
 
   const delWeekAndMove = (index, indexSelected) => {
     delWeek(index);
-    if (indexSelected >= index) setIndex(indexSelected-1)
+    if (indexSelected >= index) setIndexSelected(indexSelected - 1)
   }
 
   const [indexSelected, setIndexSelected] = useState(0);
-  const [desiredIndex, setDesiredIndex] = useState(null);
   const [flatListDesiredIndex, setFlatListDesiredIndex] = useState(0);
-  const [gestureAllowed, setGestureAllowed] = useState(false);
-
-  const setIndex = (index) => {
-    setDesiredIndex(index)
-    setIndexSelected(index)
-    console.log('change')
-  }
 
   const data = useMemo(() => {
     return getWeeksOfProgramme(programme)
   }, [programme])
 
   useEffect(() => {
-    
-    if (desiredIndex === null || flatListDesiredIndex === desiredIndex) {
-
-      console.log()
-
-      setIndexSelected(flatListDesiredIndex)
-      setDesiredIndex(null)
-      dayDetailFlatListRef.current.scrollToIndex({index: flatListDesiredIndex})
-    } else {
-      dayDetailFlatListRef.current.scrollToIndex({index: indexSelected})
-    }
-  }, [indexSelected, flatListDesiredIndex]);
+    dayDetailFlatListRef.current.scrollToIndex({ index: indexSelected })
+  }, [indexSelected]);
 
   const dayDetailFlatListRef = useRef(null);
   const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 }).current
 
-
-  const handlePageChange = useRef(({viewableItems}) => {
-
+  const handlePageChange = useRef(({ viewableItems }) => {
     setFlatListDesiredIndex(viewableItems[0].index)
-    
-    // if (desiredIndex === null) {
-    //   setIndexSelected(viewableItems[0].index)
-    //   console.log('set index to : ', viewableItems[viewableItems.length-1].index, desiredIndex)
-    // }
-    // if (viewableItems[0].index === desiredIndex) {
-    //   console.log('test')
-    //   setDesiredIndex(null)
-    // }
-
   }).current
-
+  const validatePageChange = () => {
+    setIndexSelected(flatListDesiredIndex)
+  }
 
   const handleClick = (name) => {
     Alert.alert('Hey, you clicked', `You clicked on ${name}`)
@@ -180,29 +152,29 @@ export default SliderApp = () => {
         </View>
 
         <View style={styles.titleContainer} >
-          <View style={styles.topTitleContainer} >
-            <Text style={styles.topTitleText}>Bloc peak</Text>
-            <TouchableWithoutFeedback onPress={() => { handleClick('pencil') }}>
+          <TouchableWithoutFeedback onPress={() => { handleClick('pencil') }}>
+            <View style={styles.topTitleContainer} >
+              <Text style={styles.topTitleText}>Bloc peak</Text>
               <Image style={styles.topTitleEditButton} source={require('./pencilImg.png')} resizeMode="cover" />
-            </TouchableWithoutFeedback>
-          </View>
+            </View>
+          </TouchableWithoutFeedback>
           <Text style={styles.subTitleText}>Créé ton bloc d'entrainement !</Text>
         </View>
         <View style={styles.tabContainer}>
           <FlatList
             data={data}
             renderItem={({ item, index }) => {
-              return(
-                <View style={{flexDirection: 'row', justifyContent: 'space-between', width: (windowWidth-64)}}>
+              return (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: (windowWidth - 64) }}>
                   {item.map((weekType, weekIndex) => {
-                    return <TabItem 
-                      key={numberTabPerScreen*index+weekIndex} 
-                      index={numberTabPerScreen*index+weekIndex} 
-                      indexSelected={indexSelected} 
-                      setIndex={setIndex} 
-                      type={weekType} 
+                    return <TabItem
+                      key={numberTabPerScreen * index + weekIndex}
+                      index={numberTabPerScreen * index + weekIndex}
+                      indexSelected={indexSelected}
+                      setIndex={setIndexSelected}
+                      type={weekType}
                       programme={programme}
-                      addWeek={addWeek} 
+                      addWeek={addWeek}
                       delWeek={delWeekAndMove}
                     />
                   })}
@@ -231,13 +203,13 @@ export default SliderApp = () => {
 
       </View>
       <View style={styles.bottomContainer}>
-        <FlatList 
+        <FlatList
           ref={dayDetailFlatListRef}
           data={Array(programme.data.length).fill('0')}
           renderItem={item => {
             return (
               <View style={styles.daysContainer}>
-                <ScrollView style={{paddingHorizontal: 32}}>
+                <ScrollView style={{ paddingHorizontal: 32 }}>
                   {dayslist.map(((item, index) => {
                     return <DayDetail key={index} day={item} />
                   }))}
@@ -248,18 +220,13 @@ export default SliderApp = () => {
           horizontal
           showsHorizontalScrollIndicator={false}
           pagingEnabled
-          scrollEnabled={gestureAllowed}
+          scrollEnabled={true}
           onViewableItemsChanged={handlePageChange}
           viewabilityConfig={viewConfigRef}
+          onScrollEndDrag={validatePageChange}
         />
-        
-      </View>
 
-      <View style={{position: "absolute", bottom: 10, width: '100%', justifyContent: 'center', flexDirection: 'row', alignItems: "center"}}>
-        <Switch onValueChange={setGestureAllowed} value={gestureAllowed} />
-        <Text style={styles.subTitleText}>Allow horizontal gesture</Text>
       </View>
-
     </View>
   )
 }
@@ -298,7 +265,7 @@ const styles = StyleSheet.create({
     marginBottom: 24
   },
   topTitleContainer: {
-    flexDirection: "row"
+    flexDirection: "row",
   },
   topTitleText: {
     color: '#F6F3FD',
