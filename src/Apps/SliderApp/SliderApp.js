@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, Dimensions, StyleSheet, Image, Alert, ScrollView, Animated } from 'react-native';
-import { TouchableWithoutFeedback, FlatList } from "react-native-gesture-handler";
+import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import useEditingProgramme from "./useProgramme";
 import LinearGradient from "react-native-linear-gradient";
 
 const windowWidth = Dimensions.get('window').width;
 
 const numberTabPerScreen = 4;
+const animationDuration = 200;
 
 const dayslist = ['lundi', 'mercredi', 'vendredi']
 
-const TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek }) => {
+const TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek, deleting, setDeleting }) => {
 
   const value = useRef(new Animated.Value(2)).current;
   const width = value.interpolate({
@@ -24,23 +25,29 @@ const TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek }
   })
 
   const deleteAnimation = () => {
-    console.log('animate: ', index)
     Animated.timing(value, {
       toValue: 0,
-      duration: 250,
-      delay: 1000,
+      duration: animationDuration,
       useNativeDriver: false,
-    }).start(() => delWeek(index, indexSelected))
+    }).start(() => {
+      setDeleting(null);
+      delWeek(indexSelected);
+    })
   }
+
+  if ((index !== null) && deleting === index) deleteAnimation()
+
 
   const show = index !== undefined;
   const selected = index === indexSelected
+  const displayIndex = (deleting !== null && index > indexSelected) ? index-1 : index
+
   return (
     <Animated.View style={{ width: width, opacity: opacity }}>
       {show && (index !== null ? (
         <TouchableWithoutFeedback onPress={() => { setIndex(index) }} onLongPress={deleteAnimation}>
           <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
-            <Animated.Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null, {opacity: opacity}]}>Semaine {index + 1}</Animated.Text>
+            <Animated.Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null, {opacity: opacity}]}>Semaine {displayIndex + 1}</Animated.Text>
           </View>
         </TouchableWithoutFeedback>
       ) : (
@@ -53,24 +60,52 @@ const TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek }
       ))}
       {!show && (
         <View style={[styles.tabItem]}>
-          <Text style={[styles.tabItemText, { color: '#0000' }]}>Semaine {index + 1}</Text>
+          <Text style={[styles.tabItemText, { color: '#0000' }]}>Semaine {displayIndex + 1}</Text>
         </View>
       )}
     </Animated.View>
   )
 }
 
-const DayContainer = ({ day }) => {
+const DayContainer = ({deleting, index}) => {
+
+  const value = useRef(new Animated.Value(2)).current;
+  const width = value.interpolate({
+    inputRange: [.2, 1],
+    outputRange: [0, windowWidth],
+    extrapolate: 'clamp'
+  })
+  const opacity = value.interpolate({
+    inputRange: [1, 2],
+    outputRange: [0, 1]
+  })
+  const padding = value.interpolate({
+    inputRange: [0.2, 1],
+    outputRange: [0, 44],
+    extrapolate: 'clamp'
+  })
+
+  const deleteAnimation = () => {
+    Animated.timing(value, {
+      toValue: 0,
+      duration: animationDuration,
+      useNativeDriver: false,
+    }).start()
+  }
+
+  if (deleting === index) {
+    console.log('test')
+    deleteAnimation()
+  }
+
   return (
-    <View style={styles.daysContainer}>
-      {/* <ScrollView style={{ paddingHorizontal: 32 }} showsVerticalScrollIndicator={false} > */}
+    <Animated.View style={[styles.daysContainer, {width: width, opacity: opacity, paddingHorizontal: padding}]}>
       {dayslist.map(((day, key) => {
         return (
           <DayDetail key={key} day={day} />
         )
       }))}
-      {/* </ScrollView> */}
-    </View>
+    </Animated.View>
 
   )
 }
@@ -131,17 +166,10 @@ export default SliderApp = () => {
     return getWeeksOfProgramme(programme)
   }, [programme])
 
-  const delWeekAndMove = (index, indexSelected) => {
-
-    console.log('deleting : ', index)
-
-    delWeek(index);
-    // if (indexSelected >= index) setIndex(indexSelected - 1)
-  }
-
-
   const [indexSelected, setIndexSelected] = useState(0);
   const [move, setMove] = useState(false);
+
+  const [deleting, setDeleting] = useState(null);
 
   const setIndex = (index) => {
     setIndexSelected(index);
@@ -216,7 +244,7 @@ export default SliderApp = () => {
               ref={tabRef}
             >
               {data.map((id, index) => {
-                console.log(index, ': ', (id !== null && id !== undefined) ? id : index)
+                {/* console.log(index, ': ', (id !== null && id !== undefined) ? id : index) */}
                 return <TabItem
                   key={(id !== null && id !== undefined) ? id : index}
                   index={(id !== null && id !== undefined) ? index : id}
@@ -224,13 +252,15 @@ export default SliderApp = () => {
                   setIndex={setIndex}
                   programme={programme}
                   addWeek={addWeek}
-                  delWeek={delWeekAndMove}
+                  delWeek={delWeek}
+                  deleting={deleting}
+                  setDeleting={setDeleting}
                 />
               })}
             </ScrollView>
           </View>
           <View style={styles.utilContainer} >
-            <TouchableWithoutFeedback onPress={() => { handleClick('copy') }}>
+            <TouchableWithoutFeedback onPress={() => {if (data[indexSelected] !== null) setDeleting(indexSelected)}}>
               <Image source={require('./copyImg.png')} resizeMode="cover" style={styles.utilImage} />
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={() => { handleClick('paste') }}>
@@ -267,9 +297,9 @@ export default SliderApp = () => {
             end={{ x: 0, y: 1 }}
           /> */}
 
-            {data.filter(item => item !== null && item !== undefined).map((index, key) => {
+            {data.filter(item => item !== null && item !== undefined).map((id, index) => {
               return (
-                <DayContainer key={key} day={index} />
+                <DayContainer key={id} deleting={deleting} index={index} />
               )
             })}
 
