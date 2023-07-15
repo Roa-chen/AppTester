@@ -7,7 +7,7 @@ import LinearGradient from "react-native-linear-gradient";
 const windowWidth = Dimensions.get('window').width;
 
 const numberTabPerScreen = 4;
-const animationDuration = 200;
+const animationDuration = 300;
 
 const dayslist = ['lundi', 'mercredi', 'vendredi']
 
@@ -15,8 +15,13 @@ const TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek, 
 
   const value = useRef(new Animated.Value(2)).current;
   const width = value.interpolate({
-    inputRange: [0, .5, 1],
-    outputRange: [0, 0 , ((windowWidth - 64) / numberTabPerScreen)],
+    inputRange: [.2, .5],
+    outputRange: [0, ((windowWidth - 64) / numberTabPerScreen)],
+    extrapolate: 'clamp'
+  })
+  const padding = value.interpolate({
+    inputRange: [.2, .5],
+    outputRange: [0, 6],
     extrapolate: 'clamp'
   })
   const opacity = value.interpolate({
@@ -43,9 +48,9 @@ const TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek, 
   const displayIndex = (deleting !== null && index > indexSelected) ? index-1 : index
 
   return (
-    <Animated.View style={{ width: width, opacity: opacity }}>
+    <Animated.View style={{ width: width, opacity: opacity, paddingRight: padding }}>
       {show && (index !== null ? (
-        <TouchableWithoutFeedback onPress={() => { setIndex(index) }} onLongPress={deleteAnimation}>
+        <TouchableWithoutFeedback onPress={() => { setIndex(index) }}>
           <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
             <Animated.Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null, {opacity: opacity}]}>Semaine {displayIndex + 1}</Animated.Text>
           </View>
@@ -94,7 +99,6 @@ const DayContainer = ({deleting, index}) => {
   }
 
   if (deleting === index) {
-    console.log('test')
     deleteAnimation()
   }
 
@@ -371,7 +375,6 @@ const styles = StyleSheet.create({
   },
   tabItem: {
     height: 26,
-    marginRight: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
