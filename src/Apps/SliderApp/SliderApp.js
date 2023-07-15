@@ -1,26 +1,46 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { View, Text, Dimensions, StyleSheet, Image, Alert, Switch } from 'react-native';
-import { ScrollView, TouchableWithoutFeedback, FlatList } from "react-native-gesture-handler";
+import { View, Text, Dimensions, StyleSheet, Image, Alert, ScrollView, Animated } from 'react-native';
+import { TouchableWithoutFeedback, FlatList } from "react-native-gesture-handler";
 import useEditingProgramme from "./useProgramme";
+import LinearGradient from "react-native-linear-gradient";
 
 const windowWidth = Dimensions.get('window').width;
 
 const numberTabPerScreen = 4;
 
-const itemList = [[0, 1, 2, 3], [4, 5, 6]]
 const dayslist = ['lundi', 'mercredi', 'vendredi']
 
-const TabItem = ({ index, indexSelected, setIndex, type, programme, addWeek, delWeek }) => {
+const TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek }) => {
 
-  const show = type === 'week' || type === 'button'
+  const value = useRef(new Animated.Value(2)).current;
+  const width = value.interpolate({
+    inputRange: [0, .5, 1],
+    outputRange: [0, 0 , ((windowWidth - 64) / numberTabPerScreen)],
+    extrapolate: 'clamp'
+  })
+  const opacity = value.interpolate({
+    inputRange: [1, 2],
+    outputRange: [0, 1]
+  })
 
+  const deleteAnimation = () => {
+    console.log('animate: ', index)
+    Animated.timing(value, {
+      toValue: 0,
+      duration: 250,
+      delay: 1000,
+      useNativeDriver: false,
+    }).start(() => delWeek(index, indexSelected))
+  }
+
+  const show = index !== undefined;
   const selected = index === indexSelected
   return (
-    <View>
-      {show && (type === 'week' ? (
-        <TouchableWithoutFeedback onPress={() => { setIndex(index) }} onLongPress={() => { delWeek(index, indexSelected) }}>
+    <Animated.View style={{ width: width, opacity: opacity }}>
+      {show && (index !== null ? (
+        <TouchableWithoutFeedback onPress={() => { setIndex(index) }} onLongPress={deleteAnimation}>
           <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
-            <Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null]}>Semaine {index + 1}</Text>
+            <Animated.Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null, {opacity: opacity}]}>Semaine {index + 1}</Animated.Text>
           </View>
         </TouchableWithoutFeedback>
       ) : (
@@ -36,7 +56,22 @@ const TabItem = ({ index, indexSelected, setIndex, type, programme, addWeek, del
           <Text style={[styles.tabItemText, { color: '#0000' }]}>Semaine {index + 1}</Text>
         </View>
       )}
+    </Animated.View>
+  )
+}
+
+const DayContainer = ({ day }) => {
+  return (
+    <View style={styles.daysContainer}>
+      {/* <ScrollView style={{ paddingHorizontal: 32 }} showsVerticalScrollIndicator={false} > */}
+      {dayslist.map(((day, key) => {
+        return (
+          <DayDetail key={key} day={day} />
+        )
+      }))}
+      {/* </ScrollView> */}
     </View>
+
   )
 }
 
@@ -49,81 +84,93 @@ const DayDetail = ({ day }) => {
   }
 
   return (
-    <View style={styles.dayContainer}>
-      <View style={styles.dayTitleContainer}>
-        <Text style={styles.dayTitleText}>{day}</Text>
-        <TouchableWithoutFeedback onPress={() => setOpen(open => !open)} style={{ padding: 5 }}>
+    <TouchableWithoutFeedback onPress={() => setOpen(open => !open)} style={{ padding: 5 }}>
+      <View style={styles.dayContainer}>
+        <View style={styles.dayTitleContainer}>
+          <Text style={styles.dayTitleText}>{day}</Text>
           <Image source={getImage()} resizeMode="cover" />
-        </TouchableWithoutFeedback>
+        </View>
+        <View>
+          {open && <Text style={styles.dayText}>
+            {
+              `- Squat 1x3 @9
+  - Squat 3x5 @80%
+  - Bench 1*AMRAP @70kg
+  - Bench 4*6 @80%
+  - 5cm deficit Deadlift... 4*4 @7
+  `
+            }
+          </Text>}
+        </View>
       </View>
-      <View>
-        {open && <Text style={styles.dayText}>
-          {
-            `- Squat 1x3 @9
-- Squat 3x5 @80%
-- Bench 1*AMRAP @70kg
-- Bench 4*6 @80%
-- 5cm deficit Deadlift... 4*4 @7
-`
-          }
-        </Text>}
-      </View>
-    </View>
+    </TouchableWithoutFeedback>
   )
 }
 
 const getWeeksOfProgramme = (programme) => {
 
-  const weeks = programme.data;
-  const weeksLength = weeks.length + 1
-  const needToComplete = weeksLength % numberTabPerScreen > 0 ? numberTabPerScreen - weeksLength % numberTabPerScreen : 0;
+  const l = programme.data.length + 1;
+  const need = l % 4 > 0 ? 4 - l % 4 : 0
 
   computedWeeks = []
-  let placedButton = false
 
-  for (let i = 0; i < (weeksLength + needToComplete) / numberTabPerScreen; i++) {
-    computedWeeks.push([])
-    for (let j = 0; j < numberTabPerScreen; j++) {
-      const week = weeks[numberTabPerScreen * i + j];
-      if (week) {
-        computedWeeks[i].push('week')
-      } else {
-        computedWeeks[i].push(!placedButton ? 'button' : 'null')
-        if (!placedButton) placedButton = true
-      }
-    }
-  }
+  programme.data.forEach((week, index) => computedWeeks.push(week.id))
+  computedWeeks.push(null)
+  computedWeeks = [...computedWeeks, ...Array(need).fill(undefined)]
+
   return computedWeeks
 }
+
+
 
 export default SliderApp = () => {
 
   const { programme, addWeek, delWeek } = useEditingProgramme(123456);
 
-  const delWeekAndMove = (index, indexSelected) => {
-    delWeek(index);
-    if (indexSelected >= index) setIndexSelected(indexSelected - 1)
-  }
-
-  const [indexSelected, setIndexSelected] = useState(0);
-  const [flatListDesiredIndex, setFlatListDesiredIndex] = useState(0);
-
   const data = useMemo(() => {
     return getWeeksOfProgramme(programme)
   }, [programme])
 
+  const delWeekAndMove = (index, indexSelected) => {
+
+    console.log('deleting : ', index)
+
+    delWeek(index);
+    // if (indexSelected >= index) setIndex(indexSelected - 1)
+  }
+
+
+  const [indexSelected, setIndexSelected] = useState(0);
+  const [move, setMove] = useState(false);
+
+  const setIndex = (index) => {
+    setIndexSelected(index);
+    setMove(true);
+  }
+
   useEffect(() => {
-    dayDetailFlatListRef.current.scrollToIndex({ index: indexSelected })
+    scrollRef.current.scrollTo({ x: indexSelected * windowWidth })
+    tabRef.current.scrollTo({ x: Math.round((indexSelected / 4) - 0.5) * (windowWidth - 64) })
   }, [indexSelected]);
 
-  const dayDetailFlatListRef = useRef(null);
-  const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 }).current
+  const scrollRef = useRef(null);
+  const tabRef = useRef(null)
 
-  const handlePageChange = useRef(({ viewableItems }) => {
-    setFlatListDesiredIndex(viewableItems[0].index)
-  }).current
-  const validatePageChange = () => {
-    setIndexSelected(flatListDesiredIndex)
+  const handleScroll = ({ nativeEvent }) => {
+    const x = nativeEvent.contentOffset.x
+    const index = Math.round(x / windowWidth)
+    if (!move) {
+      setIndexSelected(index)
+    }
+    if (x === indexSelected * windowWidth) {
+      setMove(false);
+    }
+  }
+
+  const handleScrollEnd = () => {
+    if (move) {
+      scrollRef.current.scrollTo({ x: indexSelected * windowWidth })
+    }
   }
 
   const handleClick = (name) => {
@@ -132,101 +179,103 @@ export default SliderApp = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topContainer}>
-        <View style={styles.buttonHeader}>
-          <TouchableWithoutFeedback onPress={() => { handleClick('supprimer') }}>
-            <View>
-              <Text style={styles.buttonHeaderText}>Supprimer</Text>
-            </View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={() => { handleClick('parameter') }}>
-            <View style={styles.imageButtonHeader}>
-              <Image source={require('./paramImg.png')} resizeMode="cover" />
-            </View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={() => { handleClick('sauvegarder') }}>
-            <View>
-              <Text style={styles.buttonHeaderText}>Sauvegarder</Text>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-
-        <View style={styles.titleContainer} >
-          <TouchableWithoutFeedback onPress={() => { handleClick('pencil') }}>
-            <View style={styles.topTitleContainer} >
-              <Text style={styles.topTitleText}>Bloc peak</Text>
-              <Image style={styles.topTitleEditButton} source={require('./pencilImg.png')} resizeMode="cover" />
-            </View>
-          </TouchableWithoutFeedback>
-          <Text style={styles.subTitleText}>Créé ton bloc d'entrainement !</Text>
-        </View>
-        <View style={styles.tabContainer}>
-          <FlatList
-            data={data}
-            renderItem={({ item, index }) => {
-              return (
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: (windowWidth - 64) }}>
-                  {item.map((weekType, weekIndex) => {
-                    return <TabItem
-                      key={numberTabPerScreen * index + weekIndex}
-                      index={numberTabPerScreen * index + weekIndex}
-                      indexSelected={indexSelected}
-                      setIndex={setIndexSelected}
-                      type={weekType}
-                      programme={programme}
-                      addWeek={addWeek}
-                      delWeek={delWeekAndMove}
-                    />
-                  })}
-                </View>
-              )
-            }}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-          />
-        </View>
-        <View style={styles.utilContainer} >
-          <TouchableWithoutFeedback onPress={() => { handleClick('copy') }}>
-            <Image source={require('./copyImg.png')} resizeMode="cover" style={styles.utilImage} />
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={() => { handleClick('paste') }}>
-            <Image source={require('./pasteImg.png')} resizeMode="cover" style={styles.utilImage} />
-          </TouchableWithoutFeedback>
-        </View>
-
-        <TouchableWithoutFeedback onPress={() => { handleClick('modify training day') }}>
-          <View style={styles.modifyButtonContainer}>
-            <Text style={styles.modifyText}>Modifier les jours d’entrainements</Text>
-          </View>
-        </TouchableWithoutFeedback>
-
-      </View>
-      <View style={styles.bottomContainer}>
-        <FlatList
-          ref={dayDetailFlatListRef}
-          data={Array(programme.data.length).fill('0')}
-          renderItem={item => {
-            return (
-              <View style={styles.daysContainer}>
-                <ScrollView style={{ paddingHorizontal: 32 }}>
-                  {dayslist.map(((item, index) => {
-                    return <DayDetail key={index} day={item} />
-                  }))}
-                </ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false} >
+        <View style={styles.topContainer}>
+          <View style={styles.buttonHeader}>
+            <TouchableWithoutFeedback onPress={() => { handleClick('supprimer') }}>
+              <View>
+                <Text style={styles.buttonHeaderText}>Supprimer</Text>
               </View>
-            )
-          }}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          pagingEnabled
-          scrollEnabled={true}
-          onViewableItemsChanged={handlePageChange}
-          viewabilityConfig={viewConfigRef}
-          onScrollEndDrag={validatePageChange}
-        />
+            </TouchableWithoutFeedback>
+            <TouchableWithoutFeedback onPress={() => { handleClick('parameter') }}>
+              <View style={styles.imageButtonHeader}>
+                <Image source={require('./paramImg.png')} resizeMode="cover" />
+              </View>
+            </TouchableWithoutFeedback>
+            <TouchableWithoutFeedback onPress={() => { handleClick('sauvegarder') }}>
+              <View>
+                <Text style={styles.buttonHeaderText}>Sauvegarder</Text>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
 
-      </View>
+          <View style={styles.titleContainer} >
+            <TouchableWithoutFeedback onPress={() => { handleClick('pencil') }}>
+              <View style={styles.topTitleContainer} >
+                <Text style={styles.topTitleText}>Bloc peak</Text>
+                <Image style={styles.topTitleEditButton} source={require('./pencilImg.png')} resizeMode="cover" />
+              </View>
+            </TouchableWithoutFeedback>
+            <Text style={styles.subTitleText}>Créé ton bloc d'entrainement !</Text>
+          </View>
+          <View style={styles.tabContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              pagingEnabled
+              ref={tabRef}
+            >
+              {data.map((id, index) => {
+                console.log(index, ': ', (id !== null && id !== undefined) ? id : index)
+                return <TabItem
+                  key={(id !== null && id !== undefined) ? id : index}
+                  index={(id !== null && id !== undefined) ? index : id}
+                  indexSelected={indexSelected}
+                  setIndex={setIndex}
+                  programme={programme}
+                  addWeek={addWeek}
+                  delWeek={delWeekAndMove}
+                />
+              })}
+            </ScrollView>
+          </View>
+          <View style={styles.utilContainer} >
+            <TouchableWithoutFeedback onPress={() => { handleClick('copy') }}>
+              <Image source={require('./copyImg.png')} resizeMode="cover" style={styles.utilImage} />
+            </TouchableWithoutFeedback>
+            <TouchableWithoutFeedback onPress={() => { handleClick('paste') }}>
+              <Image source={require('./pasteImg.png')} resizeMode="cover" style={styles.utilImage} />
+            </TouchableWithoutFeedback>
+          </View>
+
+          <TouchableWithoutFeedback onPress={() => { handleClick('modify training day') }}>
+            <View style={styles.modifyButtonContainer}>
+              <Text style={styles.modifyText}>Modifier les jours d’entrainements</Text>
+            </View>
+          </TouchableWithoutFeedback>
+
+        </View>
+        <View style={styles.bottomContainer}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            onScrollEndDrag={handleScrollEnd}
+            ref={scrollRef}
+          >
+            {/* <LinearGradient
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: 30,
+              zIndex: 10,
+            }}
+            // colors={['#fff', '#fff0']} 
+            colors={['#1A1821', '#1A182100']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          /> */}
+
+            {data.filter(item => item !== null && item !== undefined).map((index, key) => {
+              return (
+                <DayContainer key={key} day={index} />
+              )
+            })}
+
+          </ScrollView>
+        </View>
+      </ScrollView>
     </View>
   )
 }
@@ -234,6 +283,7 @@ export default SliderApp = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height: '100%',
     backgroundColor: '#1A1821',
   },
   topContainer: {
@@ -241,7 +291,7 @@ const styles = StyleSheet.create({
     paddingTop: 32,
   },
   bottomContainer: {
-    width: '100%',
+    flex: 1,
   },
   buttonHeader: {
     flexDirection: 'row',
@@ -339,9 +389,8 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   daysContainer: {
-    paddingVertical: 24,
-    paddingHorizontal: 12,
     width: windowWidth,
+    paddingHorizontal: 44,
   },
   dayContainer: {
     borderRadius: 5,
@@ -349,7 +398,7 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 24,
     paddingVertical: 10,
-    marginBottom: 24,
+    marginTop: 24,
     alignItems: 'flex-start',
   },
   dayTitleContainer: {

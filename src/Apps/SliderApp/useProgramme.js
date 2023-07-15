@@ -4,9 +4,11 @@ import { getProgramme } from "./programme";
 export default useEditingProgramme = (programmeId) => {
 
   const [programme, setProgramme] = useState(getProgramme(programmeId));
+  const [number, setNumber] = useState(7);
 
   const addWeek = () => {
-    setProgramme(({data}) => ({data: [...data, {name: 'week', data: []}]}))
+    setProgramme(({data}) => ({data: [...data, {name: 'week', id: number*111,data: []}]}))
+    setNumber(number => number+1)
   }
   
   const delWeek = (index) => {
