@@ -1,150 +1,14 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, Dimensions, StyleSheet, Image, Alert, ScrollView, Animated } from 'react-native';
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import styles from "./styles";
+
 import useEditingProgramme from "./useProgramme";
 import LinearGradient from "react-native-linear-gradient";
+import TabItem from "./TabItem";
+import DayComponent from "./DayComponent";
 
-const windowWidth = Dimensions.get('window').width;
-
-const numberTabPerScreen = 4;
-const animationDuration = 300;
-
-const dayslist = ['lundi', 'mercredi', 'vendredi']
-
-const TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek, deleting, setDeleting }) => {
-
-  const value = useRef(new Animated.Value(2)).current;
-  const width = value.interpolate({
-    inputRange: [.2, .5],
-    outputRange: [0, ((windowWidth - 64) / numberTabPerScreen)],
-    extrapolate: 'clamp'
-  })
-  const padding = value.interpolate({
-    inputRange: [.2, .5],
-    outputRange: [0, 6],
-    extrapolate: 'clamp'
-  })
-  const opacity = value.interpolate({
-    inputRange: [1, 2],
-    outputRange: [0, 1]
-  })
-
-  const deleteAnimation = () => {
-    Animated.timing(value, {
-      toValue: 0,
-      duration: animationDuration,
-      useNativeDriver: false,
-    }).start(() => {
-      setDeleting(null);
-      delWeek(indexSelected);
-    })
-  }
-
-  if ((index !== null) && deleting === index) deleteAnimation()
-
-
-  const show = index !== undefined;
-  const selected = index === indexSelected
-  const displayIndex = (deleting !== null && index > indexSelected) ? index-1 : index
-
-  return (
-    <Animated.View style={{ width: width, opacity: opacity, paddingRight: padding }}>
-      {show && (index !== null ? (
-        <TouchableWithoutFeedback onPress={() => { setIndex(index) }}>
-          <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
-            <Animated.Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null, {opacity: opacity}]}>Semaine {displayIndex + 1}</Animated.Text>
-          </View>
-        </TouchableWithoutFeedback>
-      ) : (
-        <TouchableWithoutFeedback onPress={() => addWeek(programme)}>
-          <View style={[styles.tabItem]}>
-            {/* <Text style={[styles.tabItemText, {color: '#0005'}]}>Semaine {index + 1}</Text> */}
-            <Image source={require('./plusImg.png')} resizeMode="cover" />
-          </View>
-        </TouchableWithoutFeedback>
-      ))}
-      {!show && (
-        <View style={[styles.tabItem]}>
-          <Text style={[styles.tabItemText, { color: '#0000' }]}>Semaine {displayIndex + 1}</Text>
-        </View>
-      )}
-    </Animated.View>
-  )
-}
-
-const DayContainer = ({deleting, index}) => {
-
-  const value = useRef(new Animated.Value(2)).current;
-  const width = value.interpolate({
-    inputRange: [.2, 1],
-    outputRange: [0, windowWidth],
-    extrapolate: 'clamp'
-  })
-  const opacity = value.interpolate({
-    inputRange: [1, 2],
-    outputRange: [0, 1]
-  })
-  const padding = value.interpolate({
-    inputRange: [0.2, 1],
-    outputRange: [0, 44],
-    extrapolate: 'clamp'
-  })
-
-  const deleteAnimation = () => {
-    Animated.timing(value, {
-      toValue: 0,
-      duration: animationDuration,
-      useNativeDriver: false,
-    }).start()
-  }
-
-  if (deleting === index) {
-    deleteAnimation()
-  }
-
-  return (
-    <Animated.View style={[styles.daysContainer, {width: width, opacity: opacity, paddingHorizontal: padding}]}>
-      {dayslist.map(((day, key) => {
-        return (
-          <DayDetail key={key} day={day} />
-        )
-      }))}
-    </Animated.View>
-
-  )
-}
-
-const DayDetail = ({ day }) => {
-
-  const [open, setOpen] = useState(false);
-
-  const getImage = () => {
-    return (open ? require('./triangleDownImg.png') : require('./triangleRightImg.png'))
-  }
-
-  return (
-    <TouchableWithoutFeedback onPress={() => setOpen(open => !open)} style={{ padding: 5 }}>
-      <View style={styles.dayContainer}>
-        <View style={styles.dayTitleContainer}>
-          <Text style={styles.dayTitleText}>{day}</Text>
-          <Image source={getImage()} resizeMode="cover" />
-        </View>
-        <View>
-          {open && <Text style={styles.dayText}>
-            {
-              `- Squat 1x3 @9
-  - Squat 3x5 @80%
-  - Bench 1*AMRAP @70kg
-  - Bench 4*6 @80%
-  - 5cm deficit Deadlift... 4*4 @7
-  `
-            }
-          </Text>}
-        </View>
-      </View>
-    </TouchableWithoutFeedback>
-  )
-}
+import { windowWidth } from "./constants";
 
 const getWeeksOfProgramme = (programme) => {
 
@@ -221,7 +85,7 @@ export default SliderApp = () => {
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={() => { handleClick('parameter') }}>
               <View style={styles.imageButtonHeader}>
-                <Image source={require('./paramImg.png')} resizeMode="cover" />
+                <Image source={require('./assets/paramImg.png')} resizeMode="cover" />
               </View>
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={() => { handleClick('sauvegarder') }}>
@@ -235,7 +99,7 @@ export default SliderApp = () => {
             <TouchableWithoutFeedback onPress={() => { handleClick('pencil') }}>
               <View style={styles.topTitleContainer} >
                 <Text style={styles.topTitleText}>Bloc peak</Text>
-                <Image style={styles.topTitleEditButton} source={require('./pencilImg.png')} resizeMode="cover" />
+                <Image style={styles.topTitleEditButton} source={require('./assets/pencilImg.png')} resizeMode="cover" />
               </View>
             </TouchableWithoutFeedback>
             <Text style={styles.subTitleText}>Créé ton bloc d'entrainement !</Text>
@@ -248,7 +112,7 @@ export default SliderApp = () => {
               ref={tabRef}
             >
               {data.map((id, index) => {
-                {/* console.log(index, ': ', (id !== null && id !== undefined) ? id : index) */}
+                {/* console.log(index, ': ', (id !== null && id !== undefined) ? id : index) */ }
                 return <TabItem
                   key={(id !== null && id !== undefined) ? id : index}
                   index={(id !== null && id !== undefined) ? index : id}
@@ -264,11 +128,11 @@ export default SliderApp = () => {
             </ScrollView>
           </View>
           <View style={styles.utilContainer} >
-            <TouchableWithoutFeedback onPress={() => {if (data[indexSelected] !== null) setDeleting(indexSelected)}}>
-              <Image source={require('./copyImg.png')} resizeMode="cover" style={styles.utilImage} />
+            <TouchableWithoutFeedback onPress={() => { if (data[indexSelected] !== null) setDeleting(indexSelected) }}>
+              <Image source={require('./assets/copyImg.png')} resizeMode="cover" style={styles.utilImage} />
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={() => { handleClick('paste') }}>
-              <Image source={require('./pasteImg.png')} resizeMode="cover" style={styles.utilImage} />
+              <Image source={require('./assets/pasteImg.png')} resizeMode="cover" style={styles.utilImage} />
             </TouchableWithoutFeedback>
           </View>
 
@@ -303,7 +167,7 @@ export default SliderApp = () => {
 
             {data.filter(item => item !== null && item !== undefined).map((id, index) => {
               return (
-                <DayContainer key={id} deleting={deleting} index={index} />
+                <DayComponent key={id} deleting={deleting} index={index} />
               )
             })}
 
@@ -313,147 +177,3 @@ export default SliderApp = () => {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    height: '100%',
-    backgroundColor: '#1A1821',
-  },
-  topContainer: {
-    paddingHorizontal: 32,
-    paddingTop: 32,
-  },
-  bottomContainer: {
-    flex: 1,
-  },
-  buttonHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    height: 26,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  buttonHeaderText: {
-    color: '#8F6BFF',
-    fontSize: 14,
-    lineHeight: 26,
-    fontFamily: "Inter_regular",
-  },
-  imageButtonHeader: {
-    width: 17,
-    height: 17,
-  },
-  titleContainer: {
-    marginBottom: 24
-  },
-  topTitleContainer: {
-    flexDirection: "row",
-  },
-  topTitleText: {
-    color: '#F6F3FD',
-    fontSize: 24,
-    lineHeight: 40,
-    fontFamily: "Inter_bold",
-    fontWeight: 700,
-  },
-  topTitleEditButton: {
-    width: 14,
-    height: 14,
-    marginLeft: 5,
-  },
-  subTitleText: {
-    color: '#88858F',
-    fontSize: 14,
-    lineHeight: 26,
-    fontFamily: "Inter_regular",
-  },
-  tabContainer: {
-    height: 26,
-    marginBottom: 24,
-  },
-  tabItem: {
-    height: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabItemSelected: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#F6F3FD',
-  },
-  tabItemText: {
-    fontSize: 14,
-    lineHeight: 26,
-    color: '#88858F',
-    fontFamily: "Inter_regular",
-  },
-  tabItemTextSelected: {
-    color: '#F6F3FD',
-  },
-  utilContainer: {
-    marginBottom: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  utilImage: {
-    marginHorizontal: 24,
-    width: 17,
-    height: 17,
-  },
-  modifyButtonContainer: {
-    borderRadius: 5,
-    backgroundColor: "#2f2b3a",
-    width: "100%",
-    overflow: "hidden",
-    flexDirection: "row",
-    paddingHorizontal: 26,
-    paddingVertical: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  modifyText: {
-    fontSize: 14,
-    lineHeight: 26,
-    fontFamily: "Inter_regular",
-    color: "#8f6bff",
-    textAlign: "center"
-  },
-  daysContainer: {
-    width: windowWidth,
-    paddingHorizontal: 44,
-  },
-  dayContainer: {
-    borderRadius: 5,
-    backgroundColor: "#2f2b3a",
-    width: "100%",
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    marginTop: 24,
-    alignItems: 'flex-start',
-  },
-  dayTitleContainer: {
-    flexDirection: "row",
-    alignItems: 'center'
-  },
-  dayTitleText: {
-    fontSize: 14,
-    lineHeight: 26,
-    fontFamily: "Inter_regular",
-    color: "#f6f3fd",
-    marginRight: 4,
-  },
-  dayImage: {
-    height: 9,
-    width: 9,
-  },
-  dayText: {
-    fontSize: 14,
-    lineHeight: 26,
-    fontFamily: "Inter_regular",
-    color: "#f6f3fd",
-    textAlign: "left"
-  }
-})
