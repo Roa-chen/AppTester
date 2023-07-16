@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, Animated, Image } from 'react-native'
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { windowWidth, dayslist, animationDuration } from "./constants";
@@ -8,37 +8,35 @@ import styles from "./styles";
 
 export default DayContainer = ({ deleting, index }) => {
 
-  // const value = useRef(new Animated.Value(2)).current;
-  // const width = value.interpolate({
-  //   inputRange: [.2, 1],
-  //   outputRange: [0, windowWidth],
-  //   extrapolate: 'clamp'
-  // })
-  // const opacity = value.interpolate({
-  //   inputRange: [1, 2],
-  //   outputRange: [0, 1]
-  // })
-  // const padding = value.interpolate({
-  //   inputRange: [0.2, 1],
-  //   outputRange: [0, 44],
-  //   extrapolate: 'clamp'
-  // })
+  const value = useRef(new Animated.Value(1)).current;
 
-  // const deleteAnimation = () => {
-  //   Animated.timing(value, {
-  //     toValue: 0,
-  //     duration: animationDuration,
-  //     useNativeDriver: false,
-  //   }).start()
-  // }
+  useEffect(() => {
+    if (deleting === index) {
+      Animated.timing(value, {
+        toValue: 0,
+        duration: animationDuration*2,
+        useNativeDriver: false,
+      }).start()
+    }
+  }, [deleting])
 
-  // if (deleting === index) {
-  //   deleteAnimation()
-  // }
+
+
+  const opacity = value.interpolate({
+    inputRange: [0.5, 1],
+    outputRange: [0, 1]
+  })
+  const width = value.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, windowWidth]
+  })
+  const padding = value.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 44]
+  })
 
   return (
-    // <Animated.View style={[styles.daysContainer, { width: width, opacity: opacity, paddingHorizontal: padding }]}>
-    <Animated.View style={[styles.daysContainer, { width: windowWidth, opacity: 1, paddingHorizontal: 44 }]}>
+    <Animated.View style={[styles.daysContainer, { width: width, opacity: opacity, paddingHorizontal: padding}]}>
       {dayslist.map(((day, key) => {
         return (
           <DayDetail key={key} day={day} />

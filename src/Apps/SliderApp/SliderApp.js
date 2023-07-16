@@ -18,7 +18,7 @@ const getWeeksOfProgramme = (programme) => {
 
   programme.data.forEach((week, index) => computedWeeks.push(week.id))
   computedWeeks.push(-1)
-  computedWeeks = [...computedWeeks, ...Array(need).fill('1').map((_, index) => -index-2)]
+  computedWeeks = [...computedWeeks, ...Array(need).fill('1').map((_, index) => -index - 2)]
 
   return computedWeeks
 }
@@ -29,12 +29,11 @@ export default SliderApp = () => {
 
   const { programme, addWeek, delWeek } = useEditingProgramme(123456);
 
-  const delWeekInProgramme = (index) =>  {
+  const delWeekInProgramme = (index) => {
     setDeleting(null);
     delWeek(index);
-    if (index + 1 === programme.data.length) setIndex(index-1)
+    if (index + 1 === programme.data.length) setIndex(index - 1)
   }
-
   const data = useMemo(() => {
     return getWeeksOfProgramme(programme)
   }, [programme])
@@ -122,7 +121,7 @@ export default SliderApp = () => {
               }} />
 
               {data.map((id, index) => {
-                
+
                 return <TabItem
                   key={id}
                   index={id > 0 ? index : id}
@@ -164,7 +163,12 @@ export default SliderApp = () => {
             ref={scrollRef}
           >
 
-            {data.filter(item => item !== null && item !== undefined).map((id, index) => {
+            {/* <View style={{
+              height: heights[indexSelected+1] ? heights[indexSelected+1]+300:1000,
+              width: windowWidth * data.filter(item => item > 0).length
+            }} /> */}
+
+            {data.filter(item => item > 0).map((id, index) => {
               return (
                 <DayComponent key={id} deleting={deleting} index={index} />
               )
