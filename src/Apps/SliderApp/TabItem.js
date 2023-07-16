@@ -1,49 +1,56 @@
-import React, { userState, useRef } from 'react';
+import React, { userState, useRef, useEffect } from 'react';
 import { View, Text, Animated, Image } from 'react-native'
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { windowWidth, animationDuration } from "./constants";
 import { numberTabPerScreen } from './constants';
 import styles from "./styles";
 
-export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek, deleting, setDeleting }) => {
+export default TabItem = ({ index, position, indexSelected, setIndex, programme, addWeek, delWeek, deleting, setDeleting }) => {
 
-  const value = useRef(new Animated.Value(2)).current;
-  const width = value.interpolate({
-    inputRange: [.2, .5],
-    outputRange: [0, ((windowWidth - 64) / numberTabPerScreen)],
-    extrapolate: 'clamp'
-  })
-  const padding = value.interpolate({
-    inputRange: [.2, .5],
-    outputRange: [0, 6],
-    extrapolate: 'clamp'
-  })
-  const opacity = value.interpolate({
-    inputRange: [1, 2],
-    outputRange: [0, 1]
-  })
+  const left = useRef(new Animated.Value(((windowWidth - 64) / numberTabPerScreen)*position)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+  const width = useRef(new Animated.Value(0)).current;
 
-  const deleteAnimation = () => {
-    Animated.timing(value, {
-      toValue: 0,
+  useEffect(() => {
+    Animated.timing(width, {
+      toValue: ((windowWidth - 64) / numberTabPerScreen),
       duration: animationDuration,
       useNativeDriver: false,
-    }).start(() => {
-      setDeleting(null);
-      delWeek(indexSelected);
-    })
-  }
+    }).start()
+  }, [])
 
-  if ((index !== null) && deleting === index) deleteAnimation()
+  useEffect(() => {
+    Animated.timing(left, {
+      toValue: ((windowWidth - 64) / numberTabPerScreen)*position,
+      duration: animationDuration,
+      useNativeDriver: false,
+    }).start()
+  }, [position])
 
+  useEffect(() => {
+    if (deleting === index) {
+      console.log('deleting: ', index)
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: animationDuration*2,
+        useNativeDriver: false,
+      }).start(() => delWeek(index))
+    }
+  }, [deleting])
 
-  const show = index !== undefined;
+  const show = index > -2;
   const selected = index === indexSelected
-  const displayIndex = (deleting !== null && index > indexSelected) ? index - 1 : index
+  const displayIndex = index
+  // const displayIndex = (deleting !== null && index > indexSelected) ? index - 1 : index
 
   return (
-    <Animated.View style={{ width: width, opacity: opacity, paddingRight: padding }}>
-      {show && (index !== null ? (
+    <Animated.View style={{ 
+      width: width, 
+      opacity: opacity,
+      position: 'absolute',
+      left: left,
+    }}>
+      {show && (index !== -1 ? (
         <TouchableWithoutFeedback onPress={() => { setIndex(index) }}>
           <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
             <Animated.Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null, { opacity: opacity }]}>Semaine {displayIndex + 1}</Animated.Text>

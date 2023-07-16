@@ -1,14 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { View, Text, Dimensions, StyleSheet, Image, Alert, ScrollView, Animated } from 'react-native';
+import { View, Text, Image, Alert, ScrollView } from 'react-native';
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import styles from "./styles";
 
 import useEditingProgramme from "./useProgramme";
-import LinearGradient from "react-native-linear-gradient";
 import TabItem from "./TabItem";
 import DayComponent from "./DayComponent";
 
-import { windowWidth } from "./constants";
+import { numberTabPerScreen, windowWidth } from "./constants";
 
 const getWeeksOfProgramme = (programme) => {
 
@@ -18,8 +17,8 @@ const getWeeksOfProgramme = (programme) => {
   computedWeeks = []
 
   programme.data.forEach((week, index) => computedWeeks.push(week.id))
-  computedWeeks.push(null)
-  computedWeeks = [...computedWeeks, ...Array(need).fill(undefined)]
+  computedWeeks.push(-1)
+  computedWeeks = [...computedWeeks, ...Array(need).fill('1').map((_, index) => -index-2)]
 
   return computedWeeks
 }
@@ -29,6 +28,12 @@ const getWeeksOfProgramme = (programme) => {
 export default SliderApp = () => {
 
   const { programme, addWeek, delWeek } = useEditingProgramme(123456);
+
+  const delWeekInProgramme = (index) =>  {
+    setDeleting(null);
+    delWeek(index);
+    if (index + 1 === programme.data.length) setIndex(index-1)
+  }
 
   const data = useMemo(() => {
     return getWeeksOfProgramme(programme)
@@ -111,16 +116,22 @@ export default SliderApp = () => {
               pagingEnabled
               ref={tabRef}
             >
+
+              <View style={{
+                width: ((windowWidth - 64) / numberTabPerScreen * data.length)
+              }} />
+
               {data.map((id, index) => {
-                {/* console.log(index, ': ', (id !== null && id !== undefined) ? id : index) */ }
+                
                 return <TabItem
-                  key={(id !== null && id !== undefined) ? id : index}
-                  index={(id !== null && id !== undefined) ? index : id}
+                  key={id}
+                  index={id > 0 ? index : id}
+                  position={index}
                   indexSelected={indexSelected}
                   setIndex={setIndex}
                   programme={programme}
                   addWeek={addWeek}
-                  delWeek={delWeek}
+                  delWeek={delWeekInProgramme}
                   deleting={deleting}
                   setDeleting={setDeleting}
                 />
@@ -138,7 +149,7 @@ export default SliderApp = () => {
 
           <TouchableWithoutFeedback onPress={() => { handleClick('modify training day') }}>
             <View style={styles.modifyButtonContainer}>
-              <Text style={styles.modifyText}>Modifier les jours d’entrainements</Text>
+              <Text style={styles.modifyText}>Modifier les jours d'entrainements</Text>
             </View>
           </TouchableWithoutFeedback>
 
@@ -152,18 +163,6 @@ export default SliderApp = () => {
             onScrollEndDrag={handleScrollEnd}
             ref={scrollRef}
           >
-            {/* <LinearGradient
-            style={{
-              position: 'absolute',
-              width: '100%',
-              height: 30,
-              zIndex: 10,
-            }}
-            // colors={['#fff', '#fff0']} 
-            colors={['#1A1821', '#1A182100']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-          /> */}
 
             {data.filter(item => item !== null && item !== undefined).map((id, index) => {
               return (
