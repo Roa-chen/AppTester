@@ -8,12 +8,14 @@ import styles from "./styles";
 export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek, deleting, button, scrollTabTo }) => {
 
   const [drag, setDrag] = useState(false);
+  const [touchOffset, setTouchOffset] = useState(0);
+  const initialPage = Math.round((index-2)/4);
   let changingPage = false;
   let pageOffset = 0;
-  let touchOffset = 0;
-  const initialPage = Math.round((index-2)/4);
 
-  const panResponder = useRef(PanResponder.create({
+  console.log('reload')
+
+  const panResponder = PanResponder.create({
     // Ask to be the responder:
     // onStartShouldSetPanResponder: (evt, gestureState) => true,
     // onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
@@ -24,13 +26,14 @@ export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, 
       animateDrag()
       pageOffset=0;
       setIndex(index)
-
-      touchOffset = gestureState.moveX - left._value - 32 + initialPage*(windowWidth-64)
+      setTouchOffset(gestureState.moveX - left._value - 32 + initialPage*(windowWidth-64))
       console.log('touchoffset: ', touchOffset)
 
 
     },
     onPanResponderMove: (evt, gestureState) => {
+
+      console.log(initialPage)
 
       const {moveX, dx} = gestureState;
 
@@ -70,7 +73,7 @@ export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, 
       // responder. Returns true by default. Is currently only supported on android.
       return true;
     },
-  }),).current
+  })
 
   const left = useRef(new Animated.Value(((windowWidth - 64) / numberTabPerScreen)*index)).current; //pos
   const opacity = useRef(new Animated.Value(1)).current;
