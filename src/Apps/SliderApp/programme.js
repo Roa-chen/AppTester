@@ -34,6 +34,7 @@ const programme = {
     {
       name: 'week1',
       id: "123",
+      index: 0,
       data: [
         
         {
@@ -144,6 +145,7 @@ const programme = {
     {
       name: 'week2',
       id: "234",
+      index: 1,
       data: [
         
         {
@@ -292,6 +294,7 @@ const programme = {
     {
       name: 'week3',
       id: "345",
+      index: 2,
       data: [
         
         {
@@ -440,6 +443,7 @@ const programme = {
     {
       name: 'week4',
       id: "456",
+      index: 3,
       data: [
         
         {
@@ -588,6 +592,7 @@ const programme = {
     {
       name: 'week5',
       id: "567",
+      index: 4,
       data: [
         
         {
@@ -736,6 +741,7 @@ const programme = {
     {
       name: 'week6',
       id: "678",
+      index: 5,
       data: [
         
         {

@@ -9,23 +9,22 @@ import DayComponent from "./DayComponent";
 
 import { numberTabPerScreen, windowWidth } from "./constants";
 
+
 const getWeeksOfProgramme = (programme) => {
+  const computedWeeks = {}
 
-  const l = programme.data.length + 1;
-  const need = l % 4 > 0 ? 4 - l % 4 : 0
+  for (let i=0; i<programme.data.length; i++) {
+    computedWeeks[programme.data[i].id] = i;
+  }
 
-  computedWeeks = []
-
-  programme.data.forEach((week, index) => computedWeeks.push(week.id))
-  computedWeeks.push(-1)
-  computedWeeks = [...computedWeeks, ...Array(need).fill('1').map((_, index) => -index - 2)]
-
+  console.log(computedWeeks)
   return computedWeeks
 }
 
-
-
 export default SliderApp = () => {
+
+
+
 
   const { programme, addWeek, delWeek } = useEditingProgramme(123456);
 
@@ -38,9 +37,12 @@ export default SliderApp = () => {
     return getWeeksOfProgramme(programme)
   }, [programme])
 
+
+
+
+
   const [indexSelected, setIndexSelected] = useState(0);
   const [move, setMove] = useState(false);
-
   const [deleting, setDeleting] = useState(null);
 
   const setIndex = (index) => {
@@ -52,6 +54,9 @@ export default SliderApp = () => {
     scrollRef.current.scrollTo({ x: indexSelected * windowWidth })
     tabRef.current.scrollTo({ x: Math.round((indexSelected / 4) - 0.5) * (windowWidth - 64) })
   }, [indexSelected]);
+
+
+
 
   const scrollRef = useRef(null);
   const tabRef = useRef(null)
@@ -76,6 +81,9 @@ export default SliderApp = () => {
   const handleClick = (name) => {
     Alert.alert('Hey, you clicked', `You clicked on ${name}`)
   }
+
+
+
 
   return (
     <View style={styles.container}>
@@ -117,24 +125,27 @@ export default SliderApp = () => {
             >
 
               <View style={{
-                width: ((windowWidth - 64) / numberTabPerScreen * data.length)
+                width: ((windowWidth - 64) / numberTabPerScreen * (Object.keys(data).length+1+((Object.keys(data).length+1)%4 !== 0 ? 4-(Object.keys(data).length+1)%4 : 0)))
               }} />
 
-              {data.map((id, index) => {
+              {Object.entries(data).map((item) => {
+
+                const id = Number(item[0]);
+                const index = Number(item[1]);
 
                 return <TabItem
                   key={id}
-                  index={id > 0 ? index : id}
-                  position={index}
+                  id={id}
+                  index={index}
                   indexSelected={indexSelected}
                   setIndex={setIndex}
                   programme={programme}
-                  addWeek={addWeek}
                   delWeek={delWeekInProgramme}
                   deleting={deleting}
-                  setDeleting={setDeleting}
                 />
               })}
+
+              <TabItem index={Object.keys(data).length} button addWeek={addWeek} />
             </ScrollView>
           </View>
           <View style={styles.utilContainer} >
@@ -163,12 +174,11 @@ export default SliderApp = () => {
             ref={scrollRef}
           >
 
-            {/* <View style={{
-              height: heights[indexSelected+1] ? heights[indexSelected+1]+300:1000,
-              width: windowWidth * data.filter(item => item > 0).length
-            }} /> */}
+            {Object.entries(data).map(item => {
 
-            {data.filter(item => item > 0).map((id, index) => {
+              const id = Number(item[0]);
+              const index = Number(item[1]);
+
               return (
                 <DayComponent key={id} deleting={deleting} index={index} />
               )
