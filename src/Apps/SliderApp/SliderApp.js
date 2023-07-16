@@ -52,7 +52,7 @@ export default SliderApp = () => {
 
   useEffect(() => {
     scrollRef.current.scrollTo({ x: indexSelected * windowWidth })
-    tabRef.current.scrollTo({ x: Math.round((indexSelected / 4) - 0.5) * (windowWidth - 64) })
+    scrollTabTo(indexSelected);
   }, [indexSelected]);
 
 
@@ -70,6 +70,15 @@ export default SliderApp = () => {
     if (x === indexSelected * windowWidth) {
       setMove(false);
     }
+  }
+
+  const scrollTabTo = (index) => {
+
+    const length = Object.keys(data).length-1;
+    const indexMax = length + (4-length%4 !== 0 ? 4-length%4 : 0)
+    const isValide = (index >= 0 && index <= indexMax)
+    if (isValide) tabRef.current.scrollTo({ x: Math.round((index / 4) - 0.5) * (windowWidth - 64) })
+    return isValide
   }
 
   const handleScrollEnd = () => {
@@ -142,6 +151,7 @@ export default SliderApp = () => {
                   programme={programme}
                   delWeek={delWeekInProgramme}
                   deleting={deleting}
+                  scrollTabTo={scrollTabTo}
                 />
               })}
 
