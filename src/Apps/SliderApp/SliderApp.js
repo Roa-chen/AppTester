@@ -11,10 +11,10 @@ import { numberTabPerScreen, windowWidth } from "./constants";
 
 
 const getWeeksOfProgramme = (programme) => {
-  const computedWeeks = {}
+  const computedWeeks = []
 
   for (let i=0; i<programme.data.length; i++) {
-    computedWeeks[programme.data[i].id] = i;
+    computedWeeks.push(programme.data[i].id);
   }
 
   console.log(computedWeeks)
@@ -26,20 +26,64 @@ export default SliderApp = () => {
 
 
 
-  const { programme, addWeek, delWeek } = useEditingProgramme(123456);
+  const { programme, addWeek, delWeek, swapWeek } = useEditingProgramme(123456);
 
   const delWeekInProgramme = (index) => {
     setDeleting(null);
     delWeek(index);
     if (index + 1 === programme.data.length) setIndex(index - 1)
   }
-  const data = useMemo(() => {
-    return getWeeksOfProgramme(programme)
+
+  const [offsets, setOffsets] = useState([]);
+  
+  let data = useMemo(() => {
+    const data = getWeeksOfProgramme(programme);
+    // setOffsets(Array(data.length).fill(0))
+    return data;
   }, [programme])
 
 
+  const swapIndex = (index1, index2) => {
 
+    const l = data.length
+    if (index1 >= l || index2 >= l || index1 === index2) return false
 
+    // console.log(offsets)
+    // console.log("on: ", index1, "two: ", index2)
+    
+    // if (index1 < index2) {
+    //   if (offsets[index2] === 0) {
+    //     console.log('up')
+    //     setOffsets(offsets => ([...offsets.slice(0, index1), offsets[index1]+1, ...offsets.splice(index1+1, index2-(index1+1)), -1, ...offsets.splice(index2+1)]))
+    //   } else {
+    //     console.log('down')
+    //     setOffsets(offsets => ([...offsets.slice(0, index1), offsets[index1]-1, ...offsets.splice(index1+1, index2-(index1+1)), 0, ...offsets.splice(index2+1)]))
+    //   }
+    // } else {
+    //   if (offsets[index2] === 0) {
+    //     console.log('down')
+    //     setOffsets(offsets => ([...offsets.slice(0, index2), 1, ...offsets.splice(index2+1, index1-(index2+1)), offsets[index1]-1, ...offsets.splice(index1+1)]))
+    //   } else {
+    //     console.log('up')
+    //     setOffsets(offsets => ([...offsets.slice(0, index2), 0, ...offsets.splice(index2+1, index1-(index2+1)), offsets[index1]+1, ...offsets.splice(index1+1)]))
+    //   }
+    // }
+
+    swapWeek(index1, index2)
+    setIndex(indexSelected === index1 ? index2 : index1)
+
+    return true;
+  }
+
+  useEffect(() => console.log(offsets), [offsets])
+
+  const resetOffsets = () => {
+    setOffsets(Array(data.length).fill(0))
+  }
+
+  const validateSwap = () => {
+
+  }
 
   const [indexSelected, setIndexSelected] = useState(0);
   const [move, setMove] = useState(false);
@@ -54,6 +98,7 @@ export default SliderApp = () => {
     scrollRef.current.scrollTo({ x: indexSelected * windowWidth })
     scrollTabTo(indexSelected);
   }, [indexSelected]);
+
 
 
 
@@ -137,10 +182,7 @@ export default SliderApp = () => {
                 width: ((windowWidth - 64) / numberTabPerScreen * (Object.keys(data).length+1+((Object.keys(data).length+1)%4 !== 0 ? 4-(Object.keys(data).length+1)%4 : 0)))
               }} />
 
-              {Object.entries(data).map((item) => {
-
-                const id = Number(item[0]);
-                const index = Number(item[1]);
+              {data.map((id, index) => {
 
                 return <TabItem
                   key={id}
@@ -152,6 +194,8 @@ export default SliderApp = () => {
                   delWeek={delWeekInProgramme}
                   deleting={deleting}
                   scrollTabTo={scrollTabTo}
+                  swapIndex={swapIndex}
+                  offset={offsets[index]}
                 />
               })}
 
@@ -184,11 +228,7 @@ export default SliderApp = () => {
             ref={scrollRef}
           >
 
-            {Object.entries(data).map(item => {
-
-              const id = Number(item[0]);
-              const index = Number(item[1]);
-
+            {data.map((id, index) => {
               return (
                 <DayComponent key={id} deleting={deleting} index={index} />
               )

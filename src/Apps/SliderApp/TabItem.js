@@ -5,13 +5,14 @@ import { windowWidth, animationDuration } from "./constants";
 import { numberTabPerScreen } from './constants';
 import styles from "./styles";
 
-export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek, deleting, button, scrollTabTo }) => {
+export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, delWeek, deleting, button, scrollTabTo, swapIndex, offset }) => {
 
   const [drag, setDrag] = useState(false);
   const [touchOffset, setTouchOffset] = useState(0);
   const initialPage = Math.round((index-2)/4);
   let changingPage = false;
   let pageOffset = 0;
+  let hasSwitch = false;
 
   console.log('reload')
 
@@ -27,17 +28,11 @@ export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, 
       pageOffset=0;
       setIndex(index)
       setTouchOffset(gestureState.moveX - left._value - 32 + initialPage*(windowWidth-64))
-      console.log('touchoffset: ', touchOffset)
-
 
     },
     onPanResponderMove: (evt, gestureState) => {
 
-      console.log(initialPage)
-
-      const {moveX, dx} = gestureState;
-
-      // console.log('is on page: ', (pageOffset + Math.round((index-2)/4)))
+      const {moveX} = gestureState;
 
       left.setValue(moveX-32 - touchOffset + (windowWidth-64)*(pageOffset + initialPage))
       
@@ -55,9 +50,16 @@ export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, 
         }
         setTimeout(() => changingPage = false, 1000)
       }
+
+      const position = Math.round(((moveX-32) / ((windowWidth-64)/numberTabPerScreen))-0.5 + 4*(initialPage+pageOffset));
+      if (!hasSwitch && position !== index) {
+        // setIndex(0)
+        swapIndex(index, position)
+      }
+
+
     },
-    onPanResponderTerminationRequest: (evt, gestureState) =>
-    true,
+    onPanResponderTerminationRequest: (evt, gestureState) => true,
     onPanResponderRelease: (evt, gestureState) => {
       setDrag(false)
       animateDrop()
@@ -90,11 +92,11 @@ export default TabItem = ({ index, indexSelected, setIndex, programme, addWeek, 
 
   useEffect(() => {
     Animated.timing(left, {
-      toValue: ((windowWidth - 64) / numberTabPerScreen)*index, //pos
+      toValue: ((windowWidth - 64) / numberTabPerScreen)*(index), //+(offset?offset:0)
       duration: animationDuration,
       useNativeDriver: false,
     }).start()
-  }, [index]) //pos
+  }, [index, offset])
 
   useEffect(() => {
     if (deleting === index) {
