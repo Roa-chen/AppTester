@@ -33,7 +33,7 @@ function App() {
     // header: CardViewerApp,
   }
 
-  const RootStack = () => (
+  const RootStack = () => ( // BlocPeak
     <Stack.Navigator screenOptions={options} initialRouteName={__DEV__ ? 'BlocPeak' : 'Home'}>
       <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
       <Stack.Screen name="CardViewerApp" component={CardViewerApp} />

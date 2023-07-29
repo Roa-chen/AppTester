@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, Image, Alert, ScrollView } from 'react-native';
+import Animated, {useSharedValue} from 'react-native-reanimated';
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import styles from "./styles";
 
@@ -10,14 +11,14 @@ import DayComponent from "./DayComponent";
 import { numberTabPerScreen, windowWidth } from "./constants";
 
 
-const getWeeksOfProgramme = (programme) => {
+const getWeeksOfProgramme = (programme, indexes) => {
   const computedWeeks = []
 
   for (let i=0; i<programme.data.length; i++) {
     computedWeeks.push(programme.data[i].id);
+    indexes.value.push({id: programme.data[i].id, index: i});
   }
 
-  console.log(computedWeeks)
   return computedWeeks
 }
 
@@ -34,55 +35,23 @@ export default SliderApp = () => {
     if (index + 1 === programme.data.length) setIndex(index - 1)
   }
 
-  const [offsets, setOffsets] = useState([]);
-  
+  const indexes = useSharedValue([]);
   let data = useMemo(() => {
-    const data = getWeeksOfProgramme(programme);
-    // setOffsets(Array(data.length).fill(0))
+    const data = getWeeksOfProgramme(programme, indexes);
     return data;
   }, [programme])
 
+  console.log(data)
 
   const swapIndex = (index1, index2) => {
 
     const l = data.length
     if (index1 >= l || index2 >= l || index1 === index2) return false
 
-    // console.log(offsets)
-    // console.log("on: ", index1, "two: ", index2)
-    
-    // if (index1 < index2) {
-    //   if (offsets[index2] === 0) {
-    //     console.log('up')
-    //     setOffsets(offsets => ([...offsets.slice(0, index1), offsets[index1]+1, ...offsets.splice(index1+1, index2-(index1+1)), -1, ...offsets.splice(index2+1)]))
-    //   } else {
-    //     console.log('down')
-    //     setOffsets(offsets => ([...offsets.slice(0, index1), offsets[index1]-1, ...offsets.splice(index1+1, index2-(index1+1)), 0, ...offsets.splice(index2+1)]))
-    //   }
-    // } else {
-    //   if (offsets[index2] === 0) {
-    //     console.log('down')
-    //     setOffsets(offsets => ([...offsets.slice(0, index2), 1, ...offsets.splice(index2+1, index1-(index2+1)), offsets[index1]-1, ...offsets.splice(index1+1)]))
-    //   } else {
-    //     console.log('up')
-    //     setOffsets(offsets => ([...offsets.slice(0, index2), 0, ...offsets.splice(index2+1, index1-(index2+1)), offsets[index1]+1, ...offsets.splice(index1+1)]))
-    //   }
-    // }
-
     swapWeek(index1, index2)
     setIndex(indexSelected === index1 ? index2 : index1)
 
     return true;
-  }
-
-  useEffect(() => console.log(offsets), [offsets])
-
-  const resetOffsets = () => {
-    setOffsets(Array(data.length).fill(0))
-  }
-
-  const validateSwap = () => {
-
   }
 
   const [indexSelected, setIndexSelected] = useState(0);
@@ -119,7 +88,7 @@ export default SliderApp = () => {
 
   const scrollTabTo = (index) => {
 
-    const length = Object.keys(data).length-1;
+    const length = data.length-1;
     const indexMax = length + (4-length%4 !== 0 ? 4-length%4 : 0)
     const isValide = (index >= 0 && index <= indexMax)
     if (isValide) tabRef.current.scrollTo({ x: Math.round((index / 4) - 0.5) * (windowWidth - 64) })
@@ -179,7 +148,7 @@ export default SliderApp = () => {
             >
 
               <View style={{
-                width: ((windowWidth - 64) / numberTabPerScreen * (Object.keys(data).length+1+((Object.keys(data).length+1)%4 !== 0 ? 4-(Object.keys(data).length+1)%4 : 0)))
+                width: ((windowWidth - 64) / numberTabPerScreen * (data.length+1+((data.length+1)%4 !== 0 ? 4-(data.length+1)%4 : 0)))
               }} />
 
               {data.map((id, index) => {
@@ -188,6 +157,7 @@ export default SliderApp = () => {
                   key={id}
                   id={id}
                   index={index}
+                  indexes={indexes}
                   indexSelected={indexSelected}
                   setIndex={setIndex}
                   programme={programme}
@@ -195,11 +165,11 @@ export default SliderApp = () => {
                   deleting={deleting}
                   scrollTabTo={scrollTabTo}
                   swapIndex={swapIndex}
-                  offset={offsets[index]}
+                  length={data.length}
                 />
               })}
 
-              <TabItem index={Object.keys(data).length} button addWeek={addWeek} />
+              <TabItem index={data.length} button addWeek={addWeek} indexes={indexes} />
             </ScrollView>
           </View>
           <View style={styles.utilContainer} >
