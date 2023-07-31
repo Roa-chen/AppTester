@@ -9,6 +9,7 @@ import TabItem from "./TabItem";
 import DayComponent from "./DayComponent";
 
 import { numberTabPerScreen, windowWidth } from "./constants";
+import TestApp from "./Test/TestApp";
 
 
 const getWeeksOfProgramme = (programme, indexes) => {
@@ -24,8 +25,7 @@ const getWeeksOfProgramme = (programme, indexes) => {
 
 export default SliderApp = () => {
 
-
-
+  return (<TestApp />)
 
   const { programme, addWeek, delWeek, swapWeek } = useEditingProgramme(123456);
 
@@ -35,13 +35,33 @@ export default SliderApp = () => {
     if (index + 1 === programme.data.length) setIndex(index - 1)
   }
 
-  const indexes = useSharedValue([]);
-  let data = useMemo(() => {
-    const data = getWeeksOfProgramme(programme, indexes);
-    return data;
-  }, [programme])
+  const indexes = useSharedValue({});
+  const [data, setData] = useState([]);
 
-  console.log(data)
+  useEffect(() => {
+    const prev = [...data].sort().join('');
+    
+    const computedWeeks = []
+    const computedIndexes = {}
+
+    for (let i=0; i<programme.data.length; i++) {
+      computedWeeks.push(programme.data[i].id);
+      // computedIndexes.push({id: programme.data[i].id, index: i});
+      computedIndexes[programme.data[i].id] = i;
+    }
+
+    const next = [...computedWeeks].sort().join('');
+
+    if (prev!== next) {
+      setData(computedWeeks);
+      indexes.value = computedIndexes;
+    }
+
+
+  }, [programme]);
+
+  // console.log('data: ', data)
+  // console.log('indexes', indexes.value)
 
   const swapIndex = (index1, index2) => {
 
@@ -49,7 +69,15 @@ export default SliderApp = () => {
     if (index1 >= l || index2 >= l || index1 === index2) return false
 
     swapWeek(index1, index2)
-    setIndex(indexSelected === index1 ? index2 : index1)
+    // setIndex(indexSelected === index1 ? index2 : index1)
+
+    const firstId = Object.keys(indexes.value).find(key => indexes.value[key] === index1);
+    const secondId = Object.keys(indexes.value).find(key => indexes.value[key] === index2);
+
+    const newIndexes = {...indexes.value};
+    newIndexes[firstId] = indexes.value[secondId];
+    newIndexes[secondId] = indexes.value[firstId];
+    indexes.value = newIndexes;
 
     return true;
   }
@@ -105,10 +133,8 @@ export default SliderApp = () => {
     Alert.alert('Hey, you clicked', `You clicked on ${name}`)
   }
 
-
-
-
   return (
+
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} >
         <View style={styles.topContainer}>
@@ -145,6 +171,7 @@ export default SliderApp = () => {
               showsHorizontalScrollIndicator={false}
               pagingEnabled
               ref={tabRef}
+              // scrollEnabled={false}
             >
 
               <View style={{
@@ -156,7 +183,7 @@ export default SliderApp = () => {
                 return <TabItem
                   key={id}
                   id={id}
-                  index={index}
+                  // index={index}
                   indexes={indexes}
                   indexSelected={indexSelected}
                   setIndex={setIndex}
@@ -169,7 +196,7 @@ export default SliderApp = () => {
                 />
               })}
 
-              <TabItem index={data.length} button addWeek={addWeek} indexes={indexes} />
+              <TabItem length={data.length} button addWeek={addWeek} indexes={indexes} />
             </ScrollView>
           </View>
           <View style={styles.utilContainer} >

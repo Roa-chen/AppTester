@@ -1,12 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native'
 import { PanGestureHandler, TouchableWithoutFeedback, LongPressGestureHandler, State } from 'react-native-gesture-handler';
-import Animated, { Easing, event, runOnJS, runOnUI, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, event, runOnJS, runOnUI, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, useAnimatedReaction, withTiming } from 'react-native-reanimated';
 import { windowWidth, animationDuration } from "./constants";
 import { numberTabPerScreen } from './constants';
 import styles from "./styles";
 
-export default TabItem = ({ index, indexSelected, indexes, length, setIndex, programme, addWeek, delWeek, deleting, button, scrollTabTo, swapIndex }) => {
+export default TabItem = ({ indexSelected, id, indexes, length, setIndex, programme, addWeek, delWeek, deleting, button, scrollTabTo, swapIndex }) => {
+  // let index = indexes.value[Number(id)] ||Object.is(indexes.value[Number(id)], 0) ? indexes.value[Number(id)] : length;
+
+  const [index, setOwnIndex] = useState(index ||index === 0 ? index : length);
+  
+  useAnimatedReaction(() => {
+    return indexes.value[Number(id)];
+  }, (index) => {
+    // console.log(id, 'changing indexes: ', index)
+    runOnJS(setOwnIndex)(index ||index === 0 ? index : length)
+  })
+
+  // console.log(id, index)
 
   const getPosFromIndex = (index) => {
     "worklet";
@@ -18,7 +30,9 @@ export default TabItem = ({ index, indexSelected, indexes, length, setIndex, pro
   }
 
   useEffect(() => {
-    left.value = withTiming(getPosFromIndex(index), { duration: animationDuration, easing: Easing.out(Easing.exp) });
+    left.value = withTiming(getPosFromIndex(index), { duration: animationDuration, easing: Easing.out(Easing.exp) }, () => {
+      currentPage.value = getPageFromPosition(left.value);
+    });
   }, [index]);
 
   useEffect(() => {
@@ -61,6 +75,18 @@ export default TabItem = ({ index, indexSelected, indexes, length, setIndex, pro
       } else if (!changing.value && event.absoluteX < 64) { // change to previous page
         changePage(currentPage.value - 1)
       }
+
+      const indexOfPosition = Math.max(Math.floor((left.value + (ctx.defaultX - 32)) / ((windowWidth - 64) / numberTabPerScreen)), 0);
+
+      if (indexOfPosition !== index && indexOfPosition < length) {
+        // console.log("swapping", indexOfPosition, index)
+        const item = Object.keys(indexes.value).find(key => indexes.value[Number(key)] === indexOfPosition);
+        console.log("---------", item)
+        // indexes.value = {...indexes.value, [Number(id)]: indexOfPosition, [item]: index };
+        // runOnJS(setOwnIndex)(indexOfPosition);
+        // runOnJS(swapIndex)(index, indexOfPosition);
+      }
+
     },
     onFinish: (event, ctx) => {
       scale.value = 1;
@@ -80,13 +106,11 @@ export default TabItem = ({ index, indexSelected, indexes, length, setIndex, pro
     transform: [{ scale: withTiming(scale.value, { duration: 200 }) }],
   }))
 
-  const longPressRef = useRef(null);
 
   return (
     <Animated.View
       style={style}>
       <LongPressGestureHandler 
-        ref={longPressRef} 
         minDurationMs={500}
         shouldCancelWhenOutside={false}
         maxDist={100000}
@@ -103,7 +127,6 @@ export default TabItem = ({ index, indexSelected, indexes, length, setIndex, pro
       }}
       onGestureEvent={onGestureEvent}>
 
-        <Animated.View>
             <Animated.View>
               <TouchableWithoutFeedback
                 onPress={() => { !button ? setIndex(index) : addWeek(programme) }}
@@ -119,7 +142,6 @@ export default TabItem = ({ index, indexSelected, indexes, length, setIndex, pro
                 </View>
               </TouchableWithoutFeedback>
             </Animated.View>
-        </Animated.View>
       </LongPressGestureHandler>
     </Animated.View>
 
