@@ -1,15 +1,12 @@
 import React, {useEffect} from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Button } from "react-native";
 import { animationDuration, numberTabPerScreen, windowWidth } from "../constants";
 import { LongPressGestureHandler, State } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedGestureHandler, useAnimatedReaction, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
-const data = [];
-for (let i=0; i<15; i++) {
-  data.push(i);
-}
-
 export default TestApp = () => {
+
+  const [data, setData] = React.useState([0, 1, 2])
 
   const scrollRef = React.useRef(null);
   const scrollPosition = useSharedValue(0);
@@ -22,12 +19,19 @@ export default TestApp = () => {
   }, [data])
 
   const scrollTo = (page) => {
-    console.log(currentPage.value);
     scrollRef.current.scrollTo({ x: page * windowWidth, animated: true });
+  }
+
+  const updateData = () => {
+    setData(indexes.value);
   }
 
   return (
     <View style={styles.container}>
+      <Button title={"addItem"} onPress={() => setData(data => {
+        console.log('data: ', data)
+        return [...data, data.length]
+      })} style={{margin: 50}} />
       <View style={styles.tabScrollContainer}>
         <Animated.ScrollView
           ref={scrollRef}
@@ -43,13 +47,14 @@ export default TestApp = () => {
           {data.map((item, index) => {
             return (
               <Item
-                key={index}
+                key={item}
                 id={item}
                 index={index}
                 currentPage={currentPage}
                 scrollTo={scrollTo}
                 scrollPosition={scrollPosition}
                 indexes={indexes}
+                updateData={updateData}
               />
             )
           })}
@@ -59,7 +64,7 @@ export default TestApp = () => {
   )
 }
 
-const Item = ({ currentPage, scrollTo, scrollPosition, indexes, id }) => {
+const Item = ({ currentPage, scrollTo, scrollPosition, indexes, id, updateData }) => {
 
   const itemWidth = windowWidth / numberTabPerScreen;
   
@@ -108,7 +113,6 @@ const Item = ({ currentPage, scrollTo, scrollPosition, indexes, id }) => {
         const newIndexes = [...indexes.value.slice(0, index.value), ...indexes.value.slice(index.value + 1)]
         newIndexes.splice(indexOfPosition, 0, indexes.value[index.value]);
         indexes.value = newIndexes;
-        // console.log(newIndexes)
       }
 
 
@@ -116,6 +120,7 @@ const Item = ({ currentPage, scrollTo, scrollPosition, indexes, id }) => {
     onFinish: (event) => {
       scale.value = 1;
       left.value = withTiming(itemWidth * index.value, { duration: animationDuration });
+      runOnJS(updateData)();
     }
   })
 
@@ -147,7 +152,6 @@ const Item = ({ currentPage, scrollTo, scrollPosition, indexes, id }) => {
           }}
         >
           <Text>Item {id}</Text>
-          {/* <Text>Item {index.value}</Text> */}
         </Animated.View>
       </LongPressGestureHandler>
     </Animated.View>
