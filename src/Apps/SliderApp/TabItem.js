@@ -6,97 +6,85 @@ import { windowWidth, animationDuration } from "./constants";
 import { numberTabPerScreen } from './constants';
 import styles from "./styles";
 
-export default TabItem = ({ indexSelected, id, indexes, length, setIndex, programme, addWeek, delWeek, deleting, button, scrollTabTo, swapIndex }) => {
-  // let index = indexes.value[Number(id)] ||Object.is(indexes.value[Number(id)], 0) ? indexes.value[Number(id)] : length;
+export default TabItem = ({ indexSelected, id, indexes, setIndex, programme, addWeek, delWeek, deleting, button, scrollTabTo, updateData, currentPage, tabScrollPosition }) => {
 
-  const [index, setOwnIndex] = useState(index ||index === 0 ? index : length);
-  
-  useAnimatedReaction(() => {
-    return indexes.value[Number(id)];
-  }, (index) => {
-    // console.log(id, 'changing indexes: ', index)
-    runOnJS(setOwnIndex)(index ||index === 0 ? index : length)
-  })
-
-  // console.log(id, index)
+  const itemWidth = (windowWidth - 64) / numberTabPerScreen;
 
   const getPosFromIndex = (index) => {
     "worklet";
-    return ((windowWidth - 64) / numberTabPerScreen) * (index)
-  }
-  const getPageFromPosition = (pos) => {
-    "worklet";
-    return Math.floor((pos / ((windowWidth - 64) / numberTabPerScreen)) / 4)
+    return itemWidth * index
   }
 
-  useEffect(() => {
-    left.value = withTiming(getPosFromIndex(index), { duration: animationDuration, easing: Easing.out(Easing.exp) }, () => {
-      currentPage.value = getPageFromPosition(left.value);
-    });
-  }, [index]);
+  const index = useSharedValue(indexes.value.findIndex((index) => index === id))
+  const left = useSharedValue(getPosFromIndex(!button ? index.value : indexes.value.length));
+  const width = useSharedValue(itemWidth);
+  const opacity = useSharedValue(1);
+  const scale = useSharedValue(1);
+  const changingPage = useSharedValue(false);
+
+  useAnimatedReaction(
+    () => indexes.value,
+    (indexes) => {
+      if (!button) {
+        index.value = indexes.findIndex((index) => index === id);
+      } else {
+        index.value = indexes.length;
+      }
+      left.value = withTiming(getPosFromIndex(index.value), {duration: animationDuration})
+
+      console.log(left.value, button, index.value, getPosFromIndex(index.value))
+    }
+  )
 
   useEffect(() => {
-    if (index === deleting) {
+    if (index.value === deleting) {
       width.value = withTiming(0, {duration: animationDuration, easing: Easing.out(Easing.exp) });
       opacity.value = withTiming(0, {duration: animationDuration, easing: Easing.out(Easing.exp) }, () => {
-        runOnJS(delWeek)(index);
+        runOnJS(delWeek)(index.value);
       });
     }
   }, [deleting]);
 
-
-  const drag = useSharedValue(false);
-  const left = useSharedValue(getPosFromIndex(index));
-  const width = useSharedValue(((windowWidth - 64) / numberTabPerScreen));
-  const opacity = useSharedValue(1);
-  const scale = useSharedValue(1);
-
-  const currentPage = useSharedValue(getPageFromPosition(left.value));
-  const changing = useSharedValue(false);
-
+  const offsetToChange = 32;
   const changePage = (page) => {
     "worklet";
-    if (page < 0 || page*4>length) return;
-    runOnJS(scrollTabTo)((page)*4);
-    currentPage.value = page;
-    changing.value = true;
-    changing.value = withTiming(false, { duration: 500 })
+    runOnJS(scrollTabTo)(page);
+    changingPage.value = true;
+    changingPage.value = withTiming(false, { duration: 500 });
   }
 
   const onGestureEvent = useAnimatedGestureHandler({
     onStart: (event, ctx) => {
-      ctx.defaultX = event.absoluteX - (index%4)*((windowWidth - 64) / numberTabPerScreen);
+      ctx.defaultX = event.absoluteX - (index.value%4)*(itemWidth);
     },
     onActive: (event, ctx) => {
       left.value = event.absoluteX - ctx.defaultX + currentPage.value * (windowWidth-64); // update position
 
-      if (!changing.value && event.absoluteX > (windowWidth-64)) { // change to next page
-        changePage(currentPage.value + 1)
-      } else if (!changing.value && event.absoluteX < 64) { // change to previous page
-        changePage(currentPage.value - 1)
+      if (!changingPage.value) {
+        if (event.absoluteX > windowWidth - offsetToChange) {
+          changePage(currentPage.value + 1);
+        } else if (event.absoluteX < offsetToChange) {
+          changePage(currentPage.value - 1);
+        }
       }
 
       const indexOfPosition = Math.max(Math.floor((left.value + (ctx.defaultX - 32)) / ((windowWidth - 64) / numberTabPerScreen)), 0);
 
-      if (indexOfPosition !== index && indexOfPosition < length) {
-        // console.log("swapping", indexOfPosition, index)
-        const item = Object.keys(indexes.value).find(key => indexes.value[Number(key)] === indexOfPosition);
-        console.log("---------", item)
-        // indexes.value = {...indexes.value, [Number(id)]: indexOfPosition, [item]: index };
-        // runOnJS(setOwnIndex)(indexOfPosition);
-        // runOnJS(swapIndex)(index, indexOfPosition);
+      if (indexOfPosition!== index.value) {
+        const newIndexes = [...indexes.value.slice(0, index.value), ...indexes.value.slice(index.value + 1)]
+        newIndexes.splice(indexOfPosition, 0, indexes.value[index.value]);
+        indexes.value = newIndexes;
       }
 
     },
     onFinish: (event, ctx) => {
       scale.value = 1;
-      left.value = withTiming(getPosFromIndex(index), { duration: 100, easing: Easing.out(Easing.exp) })
-      currentPage.value = getPageFromPosition(getPosFromIndex(index));
+      left.value = withTiming(getPosFromIndex(index.value), { duration: 100, easing: Easing.out(Easing.exp) })
+      runOnJS(updateData)();
     },
   })
 
-
-  const selected = index === indexSelected
+  const selected = index.value === indexSelected
 
   const style = useAnimatedStyle(() => ({
     position: 'absolute',
@@ -113,35 +101,24 @@ export default TabItem = ({ indexSelected, id, indexes, length, setIndex, progra
       <LongPressGestureHandler 
         minDurationMs={500}
         shouldCancelWhenOutside={false}
-        maxDist={100000}
+        maxDist={windowWidth}
         onHandlerStateChange={({nativeEvent}) => {
-          if (nativeEvent.state === State.ACTIVE) {
+          if (!button && nativeEvent.state === State.ACTIVE) {
             scale.value = 1.2;
           }
-        // console.log("UNDETERMINED: ", State.UNDETERMINED) //0
-        // console.log("FAILED: ", State.FAILED)             //1
-        // console.log("BEGAN: ", State.BEGAN)               //2
-        // console.log("CANCELLED: ", State.CANCELLED)       //3
-        // console.log("ACTIVE: ", State.ACTIVE)             //4
-        // console.log("END: ", State.END)                   //5
       }}
-      onGestureEvent={onGestureEvent}>
+      onGestureEvent={!button ? onGestureEvent : null}>
 
-            <Animated.View>
-              <TouchableWithoutFeedback
-                onPress={() => { !button ? setIndex(index) : addWeek(programme) }}
-                // onLongPress={() => {
-                //   scale.value = 1.2;
-                //   drag.value = true;
-                //   console.log('pressed')
-                // }}
-              >
-                <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
-                  {!button && <Animated.Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null, { opacity: 1 }]}>Semaine {index + 1}</Animated.Text>}
-                  {button && <Image source={require('./assets/plusImg.png')} resizeMode="cover" />}
-                </View>
-              </TouchableWithoutFeedback>
-            </Animated.View>
+        <Animated.View>
+          <TouchableWithoutFeedback
+            onPress={() => { !button ? setIndex(index.value) : addWeek(programme) }}
+          >
+            <View style={[styles.tabItem, selected ? styles.tabItemSelected : null]}>
+              {!button && <Animated.Text style={[styles.tabItemText, selected ? styles.tabItemTextSelected : null, { opacity: 1 }]}>Semaine {index.value + 1}</Animated.Text>}
+              {button && <Image source={require('./assets/plusImg.png')} resizeMode="cover" />}
+            </View>
+          </TouchableWithoutFeedback>
+        </Animated.View>
       </LongPressGestureHandler>
     </Animated.View>
 

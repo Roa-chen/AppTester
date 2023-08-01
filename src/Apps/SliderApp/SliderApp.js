@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, Image, Alert, ScrollView } from 'react-native';
-import Animated, {useSharedValue} from 'react-native-reanimated';
+import Animated, {useAnimatedScrollHandler, useSharedValue} from 'react-native-reanimated';
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import styles from "./styles";
 
@@ -11,21 +11,9 @@ import DayComponent from "./DayComponent";
 import { numberTabPerScreen, windowWidth } from "./constants";
 import TestApp from "./Test/TestApp";
 
-
-const getWeeksOfProgramme = (programme, indexes) => {
-  const computedWeeks = []
-
-  for (let i=0; i<programme.data.length; i++) {
-    computedWeeks.push(programme.data[i].id);
-    indexes.value.push({id: programme.data[i].id, index: i});
-  }
-
-  return computedWeeks
-}
-
 export default SliderApp = () => {
 
-  return (<TestApp />)
+  // return (<TestApp />)
 
   const { programme, addWeek, delWeek, swapWeek } = useEditingProgramme(123456);
 
@@ -35,51 +23,45 @@ export default SliderApp = () => {
     if (index + 1 === programme.data.length) setIndex(index - 1)
   }
 
-  const indexes = useSharedValue({});
   const [data, setData] = useState([]);
+  const indexes = useSharedValue([]);
 
   useEffect(() => {
-    const prev = [...data].sort().join('');
-    
     const computedWeeks = []
-    const computedIndexes = {}
 
     for (let i=0; i<programme.data.length; i++) {
       computedWeeks.push(programme.data[i].id);
-      // computedIndexes.push({id: programme.data[i].id, index: i});
-      computedIndexes[programme.data[i].id] = i;
     }
 
-    const next = [...computedWeeks].sort().join('');
+    indexes.value = [...computedWeeks]
 
-    if (prev!== next) {
-      setData(computedWeeks);
-      indexes.value = computedIndexes;
-    }
-
-
+    setData(computedWeeks);
   }, [programme]);
 
   // console.log('data: ', data)
   // console.log('indexes', indexes.value)
 
-  const swapIndex = (index1, index2) => {
+  // const swapIndex = (index1, index2) => {
 
-    const l = data.length
-    if (index1 >= l || index2 >= l || index1 === index2) return false
+  //   const l = data.length
+  //   if (index1 >= l || index2 >= l || index1 === index2) return false
 
-    swapWeek(index1, index2)
-    // setIndex(indexSelected === index1 ? index2 : index1)
+  //   swapWeek(index1, index2)
+  //   // setIndex(indexSelected === index1 ? index2 : index1)
 
-    const firstId = Object.keys(indexes.value).find(key => indexes.value[key] === index1);
-    const secondId = Object.keys(indexes.value).find(key => indexes.value[key] === index2);
+  //   const firstId = Object.keys(indexes.value).find(key => indexes.value[key] === index1);
+  //   const secondId = Object.keys(indexes.value).find(key => indexes.value[key] === index2);
 
-    const newIndexes = {...indexes.value};
-    newIndexes[firstId] = indexes.value[secondId];
-    newIndexes[secondId] = indexes.value[firstId];
-    indexes.value = newIndexes;
+  //   const newIndexes = {...indexes.value};
+  //   newIndexes[firstId] = indexes.value[secondId];
+  //   newIndexes[secondId] = indexes.value[firstId];
+  //   indexes.value = newIndexes;
 
-    return true;
+  //   return true;
+  // }
+
+  const updateData = () => {
+    //TODO : update data function
   }
 
   const [indexSelected, setIndexSelected] = useState(0);
@@ -93,7 +75,7 @@ export default SliderApp = () => {
 
   useEffect(() => {
     scrollRef.current.scrollTo({ x: indexSelected * windowWidth })
-    scrollTabTo(indexSelected);
+    scrollTabToIndex(indexSelected);
   }, [indexSelected]);
 
 
@@ -102,6 +84,9 @@ export default SliderApp = () => {
 
   const scrollRef = useRef(null);
   const tabRef = useRef(null)
+
+  const tabScrollPosition = useSharedValue(0);
+  const currentPage = useSharedValue(0);
 
   const handleScroll = ({ nativeEvent }) => {
     const x = nativeEvent.contentOffset.x
@@ -114,14 +99,19 @@ export default SliderApp = () => {
     }
   }
 
-  const scrollTabTo = (index) => {
-
-    const length = data.length-1;
-    const indexMax = length + (4-length%4 !== 0 ? 4-length%4 : 0)
-    const isValide = (index >= 0 && index <= indexMax)
-    if (isValide) tabRef.current.scrollTo({ x: Math.round((index / 4) - 0.5) * (windowWidth - 64) })
-    return isValide
+  const scrollTabTo = (page) => {
+    tabRef.current.scrollTo({ x: page * (windowWidth-64), animated: true });
   }
+
+  const scrollTabToIndex = (index) => {
+    const page = Math.floor(index / numberTabPerScreen);
+    scrollTabTo(page)
+  }
+
+  const handleTabScroll = useAnimatedScrollHandler((event) => {
+    tabScrollPosition.value = event.contentOffset.x;
+    currentPage.value = Math.floor(event.contentOffset.x / (windowWidth-64))
+  })
 
   const handleScrollEnd = () => {
     if (move) {
@@ -166,38 +156,42 @@ export default SliderApp = () => {
             <Text style={styles.subTitleText}>Créé ton bloc d'entrainement !</Text>
           </View>
           <View style={styles.tabContainer}>
-            <ScrollView
+            <Animated.ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               pagingEnabled
               ref={tabRef}
-              // scrollEnabled={false}
-            >
-
-              <View style={{
+              onScroll={handleTabScroll}
+              contentContainerStyle={{
                 width: ((windowWidth - 64) / numberTabPerScreen * (data.length+1+((data.length+1)%4 !== 0 ? 4-(data.length+1)%4 : 0)))
-              }} />
+              }}
+            >
 
               {data.map((id, index) => {
 
                 return <TabItem
                   key={id}
+
                   id={id}
-                  // index={index}
                   indexes={indexes}
                   indexSelected={indexSelected}
                   setIndex={setIndex}
+
                   programme={programme}
                   delWeek={delWeekInProgramme}
+                  updateData={updateData}
+
                   deleting={deleting}
                   scrollTabTo={scrollTabTo}
-                  swapIndex={swapIndex}
-                  length={data.length}
+                  tabScrollPosition={tabScrollPosition}
+                  currentPage={currentPage}
                 />
               })}
 
-              <TabItem length={data.length} button addWeek={addWeek} indexes={indexes} />
-            </ScrollView>
+              <TabItem button addWeek={addWeek} indexes={indexes} />
+            
+            
+            </Animated.ScrollView>
           </View>
           <View style={styles.utilContainer} >
             <TouchableWithoutFeedback onPress={() => { if (data[indexSelected] !== null) setDeleting(indexSelected) }}>

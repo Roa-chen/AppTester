@@ -28,10 +28,7 @@ export default TestApp = () => {
 
   return (
     <View style={styles.container}>
-      <Button title={"addItem"} onPress={() => setData(data => {
-        console.log('data: ', data)
-        return [...data, data.length]
-      })} style={{margin: 50}} />
+      <Button title={"addItem"} onPress={() => setData(data => [...data, data.length])} style={{margin: 50}} />
       <View style={styles.tabScrollContainer}>
         <Animated.ScrollView
           ref={scrollRef}
@@ -49,7 +46,6 @@ export default TestApp = () => {
               <Item
                 key={item}
                 id={item}
-                index={index}
                 currentPage={currentPage}
                 scrollTo={scrollTo}
                 scrollPosition={scrollPosition}
@@ -107,7 +103,6 @@ const Item = ({ currentPage, scrollTo, scrollPosition, indexes, id, updateData }
       }
 
       const indexOfPosition = Math.max(Math.floor((left.value + ctx.defaultX) / itemWidth), 0);
-      // console.log(indexOfPosition)
 
       if (indexOfPosition!== index.value) {
         const newIndexes = [...indexes.value.slice(0, index.value), ...indexes.value.slice(index.value + 1)]
@@ -120,7 +115,7 @@ const Item = ({ currentPage, scrollTo, scrollPosition, indexes, id, updateData }
     onFinish: (event) => {
       scale.value = 1;
       left.value = withTiming(itemWidth * index.value, { duration: animationDuration });
-      runOnJS(updateData)();
+      // runOnJS(updateData)();
     }
   })
 
@@ -151,7 +146,7 @@ const Item = ({ currentPage, scrollTo, scrollPosition, indexes, id, updateData }
             justifyContent: 'center',
           }}
         >
-          <Text>Item {id}</Text>
+          <Text>Item {index.value}</Text>
         </Animated.View>
       </LongPressGestureHandler>
     </Animated.View>
