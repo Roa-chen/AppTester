@@ -13,7 +13,7 @@ import TestApp from "./Test/TestApp";
 
 export default SliderApp = () => {
 
-  // return (<TestApp />)
+  return (<TestApp />)
 
   const { programme, addWeek, delWeek, swapWeek } = useEditingProgramme(123456);
 
